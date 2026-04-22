@@ -1,0 +1,12 @@
+Please clone my instructor's demo project to my Desktop so I can practice the deploy flow on it. Narrate one sentence before each command, show the tail of output, handle errors.
+
+━━━ SETUP ━━━
+SOURCE="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPagesDemo"
+TARGET="~/Desktop/POLI3148_2026Spring_GitHubPagesDemo"
+
+━━━ STEPS ━━━
+1. `cd ~/Desktop` and check whether `POLI3148_2026Spring_GitHubPagesDemo` already exists. If so, stop and tell me it's already cloned.
+2. `git clone "$SOURCE" "$TARGET"`. Show the tail of the clone output.
+3. `cd "$TARGET"` and `git remote remove origin` so the clone is detached from my instructor's repo (ignore error if no origin).
+4. Final message, on its own line:
+   Demo ready at ~/Desktop/POLI3148_2026Spring_GitHubPagesDemo. Open that folder in VS Code (File → Open Folder), then paste Prompt 2.

@@ -1,0 +1,4407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POLI 3148 · Week 13 Lab, Make your work visible to the world</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   DESIGN TOKENS
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --bg:        #F5F5F7;
+  --ink:       #1D1D1F;
+  --mute:      #6E6E73;
+  --mute-soft: #A1A1A6;
+  --line:      rgba(29,29,31,0.12);
+  --accent:    #B84426;
+
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", "Inter", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "Inter", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   16:9 LETTERBOX · so fullscreen & PPT export match
+   ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  background: #E8E8EB;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+body { display: flex; align-items: center; justify-content: center; }
+
+.deck-frame {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SLIDES
+   ───────────────────────────────────────────────────────────── */
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6% 8%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s cubic-bezier(.22,1,.36,1);
+  background: var(--bg);
+  color: var(--ink);
+}
+.slide.active { opacity: 1; pointer-events: auto; z-index: 1; }
+
+.slide-inner {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  transform: translateY(4px);
+  opacity: 0;
+  transition: transform .6s cubic-bezier(.22,1,.36,1) .08s, opacity .6s cubic-bezier(.22,1,.36,1) .08s;
+}
+.slide.active .slide-inner { transform: translateY(0); opacity: 1; }
+
+/* ─────────────────────────────────────────────────────────────
+   TYPOGRAPHY
+   ───────────────────────────────────────────────────────────── */
+.kicker {
+  font-family: var(--font-body);
+  font-size: 0.82vw;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 500;
+  margin: 0 0 2.6vh;
+}
+
+.hero {
+  font-family: var(--font-display);
+  font-weight: 360;
+  font-size: 7.4vw;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+.hero em { font-style: italic; font-weight: 300; color: var(--accent); }
+
+.statement {
+  font-family: var(--font-display);
+  font-weight: 380;
+  font-size: 4.8vw;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+.statement em { font-style: italic; color: var(--accent); font-weight: 340; }
+
+.sub {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 380;
+  font-size: 1.7vw;
+  line-height: 1.4;
+  color: var(--mute);
+  margin: 3vh 0 0;
+  max-width: 64em;
+}
+
+/* Learn more · link grid on slide 9 */
+.learn-more {
+  margin: 6vh auto 0;
+  max-width: 72vw;
+}
+.learn-more .lm-title {
+  font-family: var(--font-mono);
+  font-size: 0.7vw;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--mute);
+  text-align: center;
+  margin-bottom: 1.4vh;
+}
+.learn-more .lm-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1vw;
+}
+.learn-more .lm-card {
+  display: block;
+  padding: 1.4vh 1vw 1.6vh;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  text-align: left;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 4px 10px -4px rgba(0,0,0,0.04);
+}
+.learn-more .lm-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -10px rgba(184,68,38,0.2);
+  border-color: rgba(184,68,38,0.35);
+}
+.learn-more .lm-card-label {
+  font-family: var(--font-mono);
+  font-size: 0.6vw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5vh;
+}
+.learn-more .lm-card-title {
+  font-family: var(--font-display);
+  font-size: 1vw;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 0.4vh;
+  letter-spacing: -0.01em;
+}
+.learn-more .lm-card-sub {
+  font-family: var(--font-body);
+  font-size: 0.7vw;
+  color: var(--mute);
+  line-height: 1.4;
+}
+
+.caption {
+  font-family: var(--font-body);
+  font-size: 1.05vw;
+  font-weight: 400;
+  color: var(--mute);
+  margin-top: 2.5vh;
+  line-height: 1.55;
+  max-width: 60em;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  font-weight: 400;
+}
+
+.accent { color: var(--accent); }
+.center { text-align: center; }
+
+/* ─────────────────────────────────────────────────────────────
+   COVER META
+   ───────────────────────────────────────────────────────────── */
+.meta {
+  font-family: var(--font-body);
+  font-size: 0.95vw;
+  color: var(--mute);
+  letter-spacing: 0.02em;
+  margin-top: 5vh;
+  line-height: 1.8;
+}
+.meta .sep { color: var(--mute-soft); margin: 0 0.6em; }
+
+/* ─────────────────────────────────────────────────────────────
+   LAYOUT VARIANTS
+   ───────────────────────────────────────────────────────────── */
+.row    { display: grid; grid-template-columns: 1fr 1fr; gap: 4vw; align-items: stretch; }
+.row-3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.4vw; align-items: stretch; }
+
+.card {
+  padding: 4.5vh 2.4vw;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.card .label {
+  font-family: var(--font-body);
+  font-size: 0.82vw;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 1.8vh;
+  color: var(--mute);
+}
+.card .label.accent-label { color: var(--accent); }
+.card h2 {
+  font-family: var(--font-display);
+  font-weight: 380;
+  font-size: 3.4vw;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0 0 2.2vh;
+}
+.card ul { list-style: none; padding: 0; margin: 0; }
+.card li {
+  font-size: 1.1vw;
+  line-height: 1.6;
+  padding: 0.35vh 0;
+  color: var(--ink);
+}
+.card li::before { content: ", "; color: var(--mute-soft); margin-right: 0.3em; }
+
+/* ─────────────────────────────────────────────────────────────
+   MOCK WEBPAGE CARDS (Slide 2 · "Notes on Democracy" v1/v2/v3)
+   ───────────────────────────────────────────────────────────── */
+.webrow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.4vw 1.6vw;
+  margin-top: 2.5vh;
+  align-items: stretch;
+  max-width: 52vw;
+  margin-left: auto;
+  margin-right: auto;
+}
+.webslot {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vh;
+}
+.webslot .stamp {
+  font-family: var(--font-mono);
+  font-size: 0.78vw;
+  color: var(--accent);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-align: center;
+}
+.webcard {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px -6px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  flex: 1;
+}
+.webcard .chrome {
+  background: #ECECEE;
+  padding: 0.9vh 0.8vw;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 0.35vw;
+}
+.webcard .chrome .dot {
+  width: 0.55vw; height: 0.55vw;
+  border-radius: 50%;
+  background: #CDCDCF;
+}
+.webcard .chrome .bar {
+  flex: 1;
+  height: 1vh;
+  min-height: 8px;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.04);
+  border-radius: 10vh;
+  margin-left: 0.4vw;
+}
+.webcard .body {
+  padding: 2.2vh 1.4vw 2vh;
+  font-family: var(--font-display);
+  font-size: 0.92vw;
+  line-height: 1.65;
+  color: var(--ink);
+  flex: 1;
+}
+.webcard .body p { margin: 0 0 0.8vh; }
+.webcard .body p.add {
+  background: rgba(30,107,52,0.09);
+  color: #1E6B34;
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+}
+.webcard .body p.del {
+  color: #A23030;
+  text-decoration: line-through;
+  text-decoration-color: rgba(162,48,48,0.6);
+  opacity: 0.75;
+}
+.webcard .body span.add {
+  background: rgba(30,107,52,0.15);
+  color: #1E6B34;
+  padding: 0.04em 0.25em;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.webcard .body span.del {
+  color: #A23030;
+  text-decoration: line-through;
+  text-decoration-color: rgba(162,48,48,0.55);
+  margin-right: 0.2em;
+  opacity: 0.75;
+  padding: 0.04em 0.25em;
+  background: rgba(162,48,48,0.06);
+  border-radius: 3px;
+}
+.webcard .body p.add::before {
+  content: "+ ";
+  color: #1E6B34;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+.webcard .body p.del::before {
+  content: "− ";
+  color: #A23030;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+/* Commit message label (replaces stamp) + commit graph */
+.webslot .commit-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5vw;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.72vw;
+  color: var(--mute);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.webslot .commit-label .hash {
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.webslot .commit-label .msg { color: var(--ink); }
+.commit-graph {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  max-width: 52vw;
+  margin: 1.8vh auto 0;
+  position: relative;
+  padding: 0 0;
+}
+.commit-graph::before {
+  content: "";
+  position: absolute;
+  left: 12.5%;
+  right: 12.5%;
+  top: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(184,68,38,0.25), var(--accent) 50%, var(--accent));
+  z-index: 0;
+}
+.commit-graph .cg-node {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6vh;
+}
+.commit-graph .cg-dot {
+  width: 0.95vw;
+  height: 0.95vw;
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px white, 0 0 0 4px rgba(184,68,38,0.25);
+}
+.commit-graph .cg-node.latest .cg-dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px white, 0 0 0 5px rgba(184,68,38,0.5), 0 0 12px rgba(184,68,38,0.4);
+}
+.commit-graph .cg-hash {
+  font-family: var(--font-mono);
+  font-size: 0.7vw;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.commit-graph .cg-latest {
+  font-family: var(--font-mono);
+  font-size: 0.62vw;
+  color: var(--accent);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BIG SPLIT (Slide 3 · Local | Cloud)
+   ───────────────────────────────────────────────────────────── */
+.split-2 {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 4vw;
+  align-items: start;
+  justify-items: center;
+  margin: 5vh 0 2vh;
+}
+.split-2 .divider { width: 1px; height: 28vh; background: var(--line); }
+.split-big { text-align: center; max-width: 26em; }
+.split-big .bigsym {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: 6vw;
+  line-height: 1;
+  color: var(--mute-soft);
+  margin-bottom: 2vh;
+}
+.split-big h3 {
+  font-family: var(--font-display);
+  font-size: 3.2vw;
+  font-weight: 360;
+  margin: 0 0 1.4vh;
+  letter-spacing: -0.02em;
+}
+.split-big .list {
+  font-family: var(--font-body);
+  font-size: 1vw;
+  color: var(--mute);
+  line-height: 2;
+  list-style: none;
+  padding: 0; margin: 0;
+}
+.split-big .list .primary { color: var(--accent); font-weight: 600; }
+
+/* Platform split (slide 3 v2 · laptop vs GitHub as hero) */
+.platform-split {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1.4vw;
+  align-items: stretch;
+  margin: 3vh auto 1vh;
+  max-width: 72vw;
+}
+.ps-card {
+  padding: 2.4vh 1.8vw 2vh;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 10px 28px -12px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ps-card.accent {
+  border: 2px solid var(--accent);
+  box-shadow: 0 14px 36px -12px rgba(184,68,38,0.22);
+  background: linear-gradient(180deg, #FFFBF9 0%, white 45%);
+}
+.ps-icon {
+  width: 7vw;
+  height: 7vw;
+  min-width: 88px; min-height: 88px;
+  margin-bottom: 1.4vh;
+}
+.ps-icon.gh { color: var(--ink); }
+.ps-card h3 {
+  font-family: var(--font-display);
+  font-size: 2.2vw;
+  font-weight: 400;
+  margin: 0 0 0.4vh;
+  letter-spacing: -0.02em;
+}
+.ps-card.accent h3 { color: var(--accent); }
+.ps-tag {
+  font-family: var(--font-body);
+  font-size: 0.92vw;
+  color: var(--mute);
+  margin: 0 0 1.4vh;
+  font-style: italic;
+}
+.ps-tag strong { color: var(--ink); font-style: normal; }
+.ps-card.accent .ps-tag strong { color: var(--accent); }
+.ps-list {
+  list-style: none;
+  padding: 0; margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.95vw;
+  color: var(--ink);
+  line-height: 1.9;
+}
+.ps-footnote {
+  margin: 1.4vh 0 0;
+  padding-top: 1vh;
+  border-top: 1px dashed var(--line);
+  font-family: var(--font-body);
+  font-size: 0.78vw;
+  color: var(--mute);
+  line-height: 1.5;
+  font-style: italic;
+}
+.ps-footnote strong { color: var(--accent); font-style: normal; }
+.ps-arrow {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7vh;
+}
+.ps-arrow svg {
+  width: 3.2vw;
+  min-width: 46px;
+  color: var(--accent);
+}
+.ps-arrow-label {
+  font-family: var(--font-mono);
+  font-size: 0.72vw;
+  color: var(--accent);
+  background: white;
+  padding: 0.25vh 0.5vw;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PLACEHOLDER (dashed box where teacher will paste screenshot)
+   ───────────────────────────────────────────────────────────── */
+.placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1.5px dashed var(--mute-soft);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.015);
+  flex-direction: column;
+  gap: 0.6vh;
+  padding: 2vh;
+}
+.placeholder.marked {
+  border-color: var(--accent);
+  background: rgba(184,68,38,0.04);
+}
+.placeholder-tall {
+  width: 100%;
+  height: 44vh;
+  border: 1.5px dashed var(--mute-soft);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.015);
+  flex-direction: column;
+  gap: 0.6vh;
+  padding: 2vh;
+}
+.placeholder-tall.marked {
+  border-color: var(--accent);
+  background: rgba(184,68,38,0.04);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   IGNORE-ROW (Slide 4 · local | .gitignore | cloud · stylized trees)
+   ───────────────────────────────────────────────────────────── */
+.ignore-row {
+  display: grid;
+  grid-template-columns: 1.3fr 0.85fr 1.3fr;
+  gap: 1.4vw;
+  align-items: stretch;
+  margin-top: 2.5vh;
+}
+.ignore-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4vh;
+  min-height: 0;
+}
+.ignore-col .col-label {
+  font-family: var(--font-body);
+  font-size: 0.82vw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 600;
+  text-align: center;
+}
+.ignore-col .col-label.accent { color: var(--accent); }
+.ignore-col .col-sub {
+  font-family: var(--font-body);
+  font-size: 0.78vw;
+  color: var(--mute-soft);
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+/* Finder-style window (LEFT · Local) */
+.finder-win {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.finder-chrome {
+  background: #ECECEC;
+  padding: 1vh 1vw;
+  display: flex;
+  align-items: center;
+  gap: 0.4vw;
+  border-bottom: 1px solid #D0D0D0;
+  position: relative;
+  min-height: 3.6vh;
+}
+.finder-chrome .tl {
+  width: 0.75vw; height: 0.75vw;
+  min-width: 10px; min-height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.finder-chrome .tl-red    { background: #FF5F57; }
+.finder-chrome .tl-yellow { background: #FEBC2E; }
+.finder-chrome .tl-green  { background: #28C840; }
+.finder-chrome .finder-title {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-body);
+  font-size: 0.78vw;
+  font-weight: 600;
+  color: #2C2C2E;
+  letter-spacing: -0.01em;
+}
+.finder-body {
+  padding: 1vh 0;
+  font-family: var(--font-body);
+  font-size: 0.78vw;
+  color: var(--ink);
+  overflow-y: auto;
+  flex: 1;
+}
+.finder-body .frow {
+  display: flex;
+  align-items: center;
+  gap: 0.4vw;
+  padding: 0.35vh 1vw;
+  line-height: 1.3;
+}
+.finder-body .frow.indent  { padding-left: 2.2vw; }
+.finder-body .frow.indent2 { padding-left: 3.4vw; }
+.finder-body .frow.ignored {
+  background: rgba(162,48,48,0.08);
+  color: #A23030;
+}
+.finder-body .fi {
+  width: 1vw; height: 1vw;
+  min-width: 14px; min-height: 14px;
+  flex-shrink: 0;
+}
+.finder-body .fi.folder { color: #5AC8FA; }
+.finder-body .fi.file   { color: #AAAEB2; }
+.finder-body .ignored .fi { color: #A23030; opacity: 0.75; }
+
+/* GitHub-style window (RIGHT · Cloud) */
+.gh-win {
+  background: white;
+  border: 1px solid #D0D7DE;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.gh-chrome {
+  background: #F6F8FA;
+  padding: 1.2vh 1vw;
+  border-bottom: 1px solid #D0D7DE;
+  display: flex;
+  align-items: center;
+  gap: 0.25vw;
+  font-family: var(--font-body);
+  font-size: 0.82vw;
+  font-weight: 600;
+  color: #0969DA;
+  min-height: 3.6vh;
+}
+.gh-chrome .gh-icon {
+  color: #57606A;
+  width: 0.9vw; height: 0.9vw;
+  min-width: 12px; min-height: 12px;
+  flex-shrink: 0;
+  margin-right: 0.3vw;
+}
+.gh-chrome .gh-slash {
+  color: #57606A;
+  font-weight: 400;
+  margin: 0 0.15em;
+}
+.gh-body {
+  font-family: var(--font-body);
+  font-size: 0.76vw;
+  color: var(--ink);
+  overflow-y: auto;
+  flex: 1;
+}
+.gh-row {
+  display: grid;
+  grid-template-columns: 1.1vw 1fr auto;
+  gap: 0.6vw;
+  padding: 0.8vh 1vw;
+  border-top: 1px solid #D0D7DE;
+  align-items: center;
+  color: #1F2328;
+}
+.gh-row:first-child { border-top: none; }
+.gh-row .fi { width: 1vw; height: 1vw; min-width: 14px; min-height: 14px; flex-shrink: 0; }
+.gh-row .fi.folder { color: #54AEFF; }
+.gh-row .fi.file   { color: #8C959F; }
+.gh-row .gh-name   { color: #1F2328; font-weight: 500; }
+.gh-row .gh-time   { font-family: var(--font-mono); font-size: 0.68vw; color: #57606A; white-space: nowrap; }
+
+/* stylized .gitignore file */
+.gitignore-file {
+  background: white;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 2.4vh 1.1vw;
+  font-family: var(--font-mono);
+  font-size: 0.82vw;
+  line-height: 2.2;
+  color: var(--ink);
+  overflow: hidden;
+  flex: 1;
+  text-align: left;
+}
+.gitignore-file .filename {
+  font-family: var(--font-mono);
+  color: var(--mute);
+  font-size: 0.72vw;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.8vh;
+  margin-bottom: 0.6vh;
+  display: flex;
+  align-items: center;
+  gap: 0.4vw;
+}
+.gitignore-file .filename::before {
+  content: '●';
+  color: var(--accent);
+  font-size: 0.55em;
+}
+.gitignore-file .rule {
+  color: var(--accent);
+  font-weight: 500;
+}
+.gitignore-file .blank { line-height: 0.8; height: 0.8vh; }
+.placeholder .plabel {
+  font-family: var(--font-mono);
+  font-size: 0.82vw;
+  color: var(--mute-soft);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.placeholder .phint {
+  font-family: var(--font-body);
+  font-size: 0.85vw;
+  color: var(--mute-soft);
+  text-align: center;
+  max-width: 26em;
+  line-height: 1.5;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   WORKFLOW TRIPLET (Slide 8)
+   ───────────────────────────────────────────────────────────── */
+.triplet {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: 1.2vw;
+  align-items: center;
+  margin-top: 4vh;
+}
+.triplet .step-col {
+  display: flex; flex-direction: column;
+  gap: 1.2vh;
+}
+.triplet .step-col .label {
+  font-family: var(--font-body);
+  font-size: 0.78vw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mute);
+  text-align: center;
+}
+.triplet .step-col .label.primary { color: var(--accent); }
+.triplet .arrow {
+  font-family: var(--font-mono);
+  font-size: 1.4vw;
+  color: var(--accent);
+  font-weight: 300;
+  padding: 0 0.2vw;
+  position: relative;
+  white-space: nowrap;
+}
+.triplet .arrow span {
+  position: absolute;
+  left: 50%; top: calc(100% + 0.6vh);
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.78vw;
+  letter-spacing: 0.12em;
+  color: var(--mute);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   THREE STEPS (Slide 9)
+   ───────────────────────────────────────────────────────────── */
+.stepslist {
+  display: flex; flex-direction: column;
+  gap: 1.8vh;
+  max-width: 52em;
+  margin: 3vh auto 3vh;
+}
+.stepslist .srow {
+  display: grid;
+  grid-template-columns: 3.6em 1fr;
+  gap: 2vw;
+  align-items: start;
+  padding: 2.4vh 2vw;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: white;
+  text-align: left;
+}
+.stepslist .srow .sn {
+  font-family: var(--font-display);
+  font-size: 2.6vw;
+  font-weight: 200;
+  line-height: 0.9;
+  color: var(--accent);
+}
+.stepslist .srow .sbody h4 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.15vw;
+  margin: 0 0 0.6vh;
+  letter-spacing: -0.01em;
+}
+.stepslist .srow .sbody p {
+  font-size: 0.95vw;
+  color: var(--mute);
+  line-height: 1.55;
+  margin: 0;
+}
+.stepslist .srow .sbody .prompt-tag {
+  display: inline-block;
+  margin-top: 0.6vh;
+  font-family: var(--font-mono);
+  font-size: 0.78vw;
+  color: var(--accent);
+  background: rgba(184,68,38,0.08);
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.handbook-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 4vh 3.5vw;
+  text-align: center;
+  margin-top: 2vh;
+}
+
+/* URL transformation pills (slide 5) */
+.url-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9vw;
+  margin: 2.5vh 0 0;
+}
+.url-pill {
+  background: #F1F1F3;
+  border: 1px solid var(--line);
+  padding: 1vh 1.2vw;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 0.88vw;
+  color: var(--mute);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4vw;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+a.url-pill { cursor: pointer; }
+a.url-pill:hover { background: #E5E5EA; border-color: var(--mute-soft); }
+.url-pill strong { color: var(--ink); font-weight: 600; }
+.url-pill.accent {
+  background: rgba(184,68,38,0.08);
+  border-color: rgba(184,68,38,0.25);
+  color: var(--accent);
+}
+a.url-pill.accent:hover { background: rgba(184,68,38,0.14); border-color: rgba(184,68,38,0.4); }
+.url-pill.accent strong { color: var(--accent); font-weight: 700; }
+.url-pill .ext-icon {
+  width: 0.72vw; height: 0.72vw;
+  min-width: 10px; min-height: 10px;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+/* Prompt card (slides 7 & 8), compact card + 3 buttons linking to .txt file */
+.prompt-layout {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 1.8vw;
+  margin-top: 2.5vh;
+  align-items: start;
+}
+.prompt-layout-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2vw;
+  margin-top: 2.5vh;
+  align-items: stretch;
+}
+.prompt-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 22px -8px rgba(0,0,0,0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.prompt-card .pc-head {
+  padding: 1.6vh 1.4vw 1.3vh;
+  background: #F6F8FA;
+  border-bottom: 1px solid var(--line);
+}
+.prompt-card .pc-tag {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.82vw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 0.5vh;
+}
+.prompt-card .pc-desc {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.92vw;
+  color: var(--ink);
+  line-height: 1.4;
+  font-weight: 400;
+}
+.prompt-card .pc-desc em { font-style: italic; color: var(--accent); font-weight: 500; }
+.prompt-card .pc-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8vw;
+  padding: 1.4vh 1.4vw;
+  background: #FAFAFC;
+}
+.pc-btn {
+  font-family: var(--font-body);
+  font-size: 0.85vw;
+  padding: 0.9vh 0.6vw;
+  border-radius: 5px;
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35vw;
+  font-weight: 500;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.pc-btn:hover { background: #F1F1F3; border-color: var(--mute-soft); }
+.pc-btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.pc-btn.primary:hover { background: #9C3B21; border-color: #9C3B21; }
+.pc-btn svg { width: 0.95vw; height: 0.95vw; min-width: 12px; min-height: 12px; flex-shrink: 0; }
+
+/* Fill-in-the-blank slots (Prompt 2 · Enter your … : _____) */
+.fill-slots {
+  padding: 1vh 1.2vw 0.2vh;
+  background: #FAFAFC;
+  display: flex; flex-direction: column; gap: 0.5vh;
+}
+.fs-row {
+  display: flex; align-items: center; gap: 0.7vw;
+  font-family: var(--font-mono);
+  font-size: 0.8vw;
+  padding: 0.15vh 0;
+}
+.fs-label {
+  color: var(--ink);
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.fs-blank {
+  flex: 1;
+  padding: 0.45vh 0.7vw;
+  border: 1.5px dashed var(--mute-soft);
+  border-radius: 4px;
+  background: white;
+  color: #B8BCC0;
+  font-size: 0.74vw;
+  letter-spacing: 0.08em;
+  min-height: 1em;
+}
+.fs-hint {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.76vw;
+  color: var(--mute);
+  white-space: nowrap;
+}
+.fs-fallback {
+  padding: 0.8vh 1.2vw 1vh;
+  margin-top: 0.5vh;
+  background: linear-gradient(90deg, #FFF6E6 0%, #FFFBF0 100%);
+  border-top: 1px solid #F2D98F;
+  font-family: var(--font-body);
+  font-size: 0.75vw;
+  line-height: 1.4;
+  color: #6B4D10;
+}
+.fs-fallback .fb-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.64vw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #92650A;
+  margin-bottom: 0.3vh;
+}
+.fs-fallback code {
+  font-family: var(--font-mono);
+  background: rgba(255,220,120,0.45);
+  padding: 0.1vh 0.35vw;
+  border-radius: 3px;
+  font-size: 0.72vw;
+  color: #5E4308;
+}
+
+/* Autopilot banner · yellow tip with dropdown mini-mock */
+.autopilot-tip {
+  margin: 1vh auto 0;
+  max-width: 62vw;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.8vw;
+  padding: 0.8vh 1vw;
+  background: linear-gradient(90deg, rgba(255,230,160,0.5), rgba(255,245,205,0.28));
+  border: 1px solid #F2D98F;
+  border-radius: 8px;
+  align-items: center;
+}
+.at-icon {
+  width: 2.2vw; height: 2.2vw;
+  min-width: 26px; min-height: 26px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  background: #FFC93D;
+  color: #5E4308;
+  font-size: 1.1vw;
+  font-weight: 700;
+}
+.at-body {
+  font-family: var(--font-body);
+  font-size: 0.85vw;
+  line-height: 1.45;
+  color: #6B4D10;
+}
+.at-body strong { color: #3E2D04; }
+.at-body code {
+  font-family: var(--font-mono);
+  background: rgba(255,220,120,0.5);
+  padding: 0.1vh 0.35vw;
+  border-radius: 3px;
+  font-size: 0.76vw;
+}
+.at-chip {
+  display: inline-flex; align-items: center; gap: 0.3vw;
+  padding: 0.5vh 0.7vw;
+  background: #1a1a1a;
+  color: #FFC93D;
+  font-family: var(--font-mono);
+  font-size: 0.66vw;
+  border-radius: 5px;
+  letter-spacing: 0.06em;
+}
+
+/* Refined Copilot Chat elements (match real-screenshot fidelity) */
+.vsc-user-quote {
+  position: relative;
+  padding: 1.1vh 1vw 0.95vh 1.2vw;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, rgba(184,68,38,0.16), rgba(184,68,38,0.05) 55%, #232325);
+  color: #f6f6f8;
+  font-size: 0.78vw;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 1.4vh 0 1.4vh;
+  border-radius: 0 5px 5px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 6px 18px -8px rgba(184,68,38,0.35);
+}
+.vsc-user-quote::before {
+  content: "YOU TYPE";
+  position: absolute;
+  top: -0.85vh;
+  left: 0.6vw;
+  font-family: var(--font-mono);
+  font-size: 0.54vw;
+  letter-spacing: 0.26em;
+  color: white;
+  background: var(--accent);
+  padding: 0.15vh 0.55vw;
+  border-radius: 3px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px -2px rgba(184,68,38,0.5);
+}
+.vsc-user-quote .vuq-tail {
+  color: #d4a696;
+  font-weight: 400;
+  font-style: italic;
+}
+.vsc-user-quote .check { display: inline-flex; vertical-align: middle; }
+.vsc-user-quote .check .ico-check,
+.vsc-env-ready .check .ico-check {
+  width: 0.85vw;
+  height: 0.85vw;
+  min-width: 11px;
+  min-height: 11px;
+  color: #5dd26a;
+  stroke-width: 2.6;
+  margin-right: 0.2vw;
+}
+.picker-mock .pm-mark svg { width: 0.7vw; height: 0.7vw; }
+.picker-mock .pm-mark.star svg { color: var(--accent); }
+.vsc-toolcall {
+  display: inline-flex; align-items: center; gap: 0.3vw;
+  padding: 0.15vh 0.5vw;
+  background: #242428;
+  border: 1px solid #2f2f34;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.62vw;
+  color: #9da0a5;
+  margin: 0.4vh 0 0.3vh;
+}
+.vsc-toolcall .tc-verb { color: #7d7d85; }
+.vsc-toolcall .tc-cmd  { color: #8db9ff; }
+.vsc-tail-label {
+  font-family: var(--font-mono);
+  font-size: 0.58vw;
+  letter-spacing: 0.12em;
+  color: #7d7d85;
+  text-transform: uppercase;
+  margin: 0.5vh 0 0.3vh;
+}
+.vsc-ai code {
+  font-family: var(--font-mono);
+  color: #8db9ff;
+  background: rgba(141,185,255,0.08);
+  padding: 0.05vh 0.3vw;
+  border-radius: 3px;
+  font-size: 0.62vw;
+}
+.vsc-env-ready {
+  display: inline-flex; align-items: center; gap: 0.4vw;
+  padding: 0.6vh 0.7vw;
+  background: rgba(123,216,143,0.16);
+  border-left: 2px solid #7bd88f;
+  color: #e8e8e8;
+  font-family: var(--font-mono);
+  font-size: 0.66vw;
+  margin: 0.8vh 0 0.3vh;
+  border-radius: 0 3px 3px 0;
+}
+.vsc-env-ready .check { color: #7bd88f; font-weight: 700; }
+.prompt-box {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-shadow: 0 6px 18px -6px rgba(0,0,0,0.08);
+}
+.prompt-box .pb-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7vw;
+  padding: 1.1vh 1.2vw;
+  background: #F6F8FA;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.prompt-box .pb-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72vw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.prompt-box .pb-desc {
+  font-family: var(--font-body);
+  font-size: 0.78vw;
+  color: var(--mute);
+  flex: 1;
+  line-height: 1.3;
+}
+.prompt-box .pb-btns {
+  display: flex;
+  gap: 0.4vw;
+  flex-shrink: 0;
+}
+.pb-btn {
+  font-family: var(--font-body);
+  font-size: 0.7vw;
+  letter-spacing: 0.04em;
+  padding: 0.55vh 0.7vw;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3vw;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.pb-btn:hover { background: #F1F1F3; }
+.pb-btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.pb-btn.primary:hover { background: #9C3B21; border-color: #9C3B21; }
+.pb-btn svg { width: 0.78vw; height: 0.78vw; flex-shrink: 0; }
+.prompt-box .pb-body {
+  padding: 1.4vh 1.2vw;
+  font-family: var(--font-mono);
+  font-size: 0.64vw;
+  line-height: 1.65;
+  color: var(--ink);
+  overflow-y: auto;
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  min-height: 0;
+}
+.prompt-box .pb-body::-webkit-scrollbar { width: 6px; }
+.prompt-box .pb-body::-webkit-scrollbar-track { background: transparent; }
+.prompt-box .pb-body::-webkit-scrollbar-thumb { background: var(--mute-soft); border-radius: 3px; }
+
+/* ─────────────────────────────────────────────────────────────
+   UI MOCKS (slides 7 & 8), Copilot Chat / Browser / Terminal
+   ───────────────────────────────────────────────────────────── */
+.win-mock {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 26px -8px rgba(0,0,0,0.14);
+  display: flex;
+  flex-direction: column;
+}
+.win-mock.dark { background: #1E1E1E; color: #E6E6E6; border-color: #333; }
+.wm-chrome {
+  background: #ECECEC;
+  padding: 0.9vh 0.9vw;
+  display: flex;
+  align-items: center;
+  gap: 0.35vw;
+  border-bottom: 1px solid #D0D0D0;
+  position: relative;
+  min-height: 3vh;
+}
+.win-mock.dark .wm-chrome { background: #2B2B2B; border-color: #000; }
+.wm-dots { display: flex; gap: 0.25vw; }
+.wm-title {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-body);
+  font-size: 0.7vw;
+  font-weight: 600;
+  color: #5C5C5C;
+  letter-spacing: -0.01em;
+}
+.win-mock.dark .wm-title { color: #8E8E93; }
+.wm-url-bar {
+  flex: 1;
+  background: white;
+  padding: 0.5vh 0.7vw;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 0.66vw;
+  color: var(--mute);
+  margin-left: 0.5vw;
+  border: 1px solid rgba(0,0,0,0.04);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Copilot Chat mock body */
+.copilot-chat {
+  padding: 1.3vh 0.9vw;
+  font-family: var(--font-body);
+  font-size: 0.7vw;
+  line-height: 1.45;
+  flex: 1;
+  overflow: hidden;
+}
+.cc-bubble { margin-bottom: 1vh; }
+.cc-bubble:last-child { margin-bottom: 0; }
+.cc-who {
+  font-family: var(--font-mono);
+  font-size: 0.58vw;
+  letter-spacing: 0.22em;
+  margin-bottom: 0.3vh;
+  text-transform: uppercase;
+  color: #7C7C82;
+}
+.cc-bubble.ai .cc-who { color: #66D9EF; }
+.cc-bubble.user .cc-who { color: #F5845C; }
+.cc-msg {
+  font-family: var(--font-mono);
+  font-size: 0.66vw;
+  color: #D4D4D4;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.cc-bubble.boxed .cc-msg {
+  background: rgba(184,68,38,0.14);
+  border-left: 2px solid var(--accent);
+  padding: 0.9vh 0.7vw;
+  border-radius: 3px;
+  color: #F5845C;
+  font-weight: 500;
+}
+
+/* ======================================================================== */
+/* Chat mock · iMessage-inspired · user right (accent) · AI left (gray)       */
+/* ======================================================================== */
+.chat-mock {
+  background: #1c1c1f;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px -14px rgba(0,0,0,0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+}
+.chat-mock .cm-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1vh 1.1vw;
+  background: #26262b;
+  border-bottom: 1px solid #38383e;
+}
+.chat-mock .cm-title {
+  color: #f2f2f5;
+  font-size: 0.78vw;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.chat-mock .cm-footer {
+  padding: 0.3vh 1.1vw 0.9vh;
+  text-align: right;
+  color: #9a9aa0;
+  font-family: var(--font-mono);
+  font-size: 0.6vw;
+  letter-spacing: 0.04em;
+}
+.chat-mock .cm-body {
+  padding: 1.6vh 1vw;
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+.chat-mock .cm-bubble {
+  max-width: 82%;
+  padding: 0.85vh 1vw;
+  border-radius: 14px;
+  font-size: 0.76vw;
+  line-height: 1.5;
+  word-break: break-word;
+  box-shadow: 0 2px 8px -3px rgba(0,0,0,0.3);
+}
+.chat-mock .cm-bubble.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+.chat-mock .cm-bubble.user em {
+  font-style: italic;
+  color: rgba(255,255,255,0.9);
+}
+.chat-mock .cm-bubble.user .tail {
+  display: inline;
+  font-style: italic;
+  color: rgba(255,255,255,0.72);
+  font-size: 0.72vw;
+}
+.chat-mock .cm-bubble.ai {
+  align-self: flex-start;
+  background: #323237;
+  color: #e8e8ec;
+  border-bottom-left-radius: 4px;
+}
+.chat-mock .cm-bubble.ai code {
+  font-family: var(--font-mono);
+  background: rgba(255,255,255,0.08);
+  color: #a8c6ff;
+  padding: 0 0.3vw;
+  border-radius: 3px;
+  font-size: 0.72vw;
+}
+.chat-mock .cm-bubble.ai em {
+  font-style: italic;
+  color: #c8c8cc;
+}
+.chat-mock .cm-status {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5vw;
+  background: rgba(93,210,106,0.12);
+  color: #6ddc7b;
+  padding: 0.7vh 1vw;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.7vw;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(93,210,106,0.22);
+  max-width: 92%;
+}
+.chat-mock .cm-status.code-pill {
+  background: rgba(255,201,61,0.14);
+  color: #ffd66b;
+  border-color: rgba(255,201,61,0.3);
+}
+.chat-mock .cm-status .ico-check {
+  width: 0.85vw;
+  height: 0.85vw;
+  min-width: 11px;
+  min-height: 11px;
+  stroke-width: 2.6;
+  flex-shrink: 0;
+}
+.chat-mock .cm-status b {
+  font-weight: 700;
+  color: inherit;
+  word-break: break-all;
+}
+
+/* ======================================================================== */
+/* Authentic VS Code Copilot Chat panel                                      */
+/* ======================================================================== */
+.vscode-chat {
+  background: #1a1a1a;
+  color: #cccccc;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  font-family: var(--font-body);
+}
+
+/* Tab row · CHAT / CLAUDE CODE / CODEX */
+.vsc-tabs {
+  display: flex;
+  gap: 1.3vw;
+  padding: 1vh 1vw 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+.vsc-tab {
+  position: relative;
+  padding: 0.7vh 0 1vh;
+  font-size: 0.6vw;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #6f6f75;
+}
+.vsc-tab.active { color: #e6e6e6; }
+.vsc-tab.active::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 2px; background: #5fb5fc;
+}
+
+/* Conversation title row */
+.vsc-title {
+  display: flex; align-items: center; gap: 0.55vw;
+  padding: 1.3vh 1vw;
+  border-bottom: 1px solid #242424;
+  font-size: 0.66vw;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #d4d4d4;
+  text-transform: uppercase;
+}
+.vsc-back { color: #7d7d85; font-size: 0.85vw; line-height: 1; }
+.vsc-title-text { flex: 1; }
+.vsc-panel-ico { color: #7d7d85; font-size: 0.9vw; line-height: 1; }
+
+/* Start Over divider */
+.vsc-divider {
+  display: flex; align-items: center; gap: 0.6vw;
+  padding: 1.3vh 1.8vw 0.6vh;
+  font-size: 0.6vw;
+  color: #6c6c73;
+  font-weight: 500;
+}
+.vsc-divider::before, .vsc-divider::after {
+  content: ""; flex: 1; height: 1px; background: #2a2a2a;
+}
+
+/* Body · scrollable-looking conversation */
+.vsc-body {
+  padding: 0.6vh 1vw 1.2vh;
+  flex: 1;
+  overflow: hidden;
+  font-size: 0.74vw;
+  line-height: 1.55;
+}
+
+/* User bubble (right-aligned, rounded gray) */
+.vsc-user {
+  display: flex; justify-content: flex-end;
+  margin: 1vh 0 1.4vh;
+}
+.vsc-user-bubble {
+  background: #2d2d2d;
+  color: #e8e8e8;
+  border-radius: 10px;
+  padding: 0.9vh 0.9vw;
+  max-width: 75%;
+  font-size: 0.72vw;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Inline MCP-style notice */
+.vsc-notice {
+  display: flex; align-items: flex-start; gap: 0.45vw;
+  font-style: italic;
+  color: #9a9aa2;
+  margin: 0.8vh 0 1vh;
+  font-size: 0.68vw;
+  line-height: 1.5;
+}
+.vsc-notice .ico { color: #7d7d85; flex-shrink: 0; }
+.vsc-notice code {
+  background: #2a2a2a;
+  padding: 0.05vh 0.35vw;
+  border-radius: 3px;
+  color: #dcdcdc;
+  font-family: var(--font-mono);
+  font-size: 0.62vw;
+  font-style: normal;
+}
+
+/* AI narration line (no bubble) */
+.vsc-ai {
+  color: #dcdcdc;
+  margin: 0.5vh 0 0.9vh;
+  font-size: 0.74vw;
+  line-height: 1.55;
+}
+.vsc-ai em { color: #9ea1a7; font-style: italic; }
+
+/* Inline command block · VS Code code-fence look */
+.vsc-cmd {
+  background: #0e0e10;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  margin: 0.6vh 0 1vh;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.64vw;
+  line-height: 1.6;
+}
+.vsc-cmd-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.5vh 0.7vw;
+  background: #18181a;
+  border-bottom: 1px solid #2a2a2a;
+  font-size: 0.55vw;
+  letter-spacing: 0.15em;
+  color: #7d7d85;
+  text-transform: uppercase;
+}
+.vsc-cmd-head .run {
+  color: #7bd88f;
+  font-size: 0.55vw;
+}
+.vsc-cmd-body {
+  padding: 0.55vh 0.7vw;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.vsc-cmd-body .in   { color: #e8e8e8; display: block; }
+.vsc-cmd-body .in::before { content: "$ "; color: #5fb5fc; }
+.vsc-cmd-body .out  { color: #9da0a5; display: block; }
+.vsc-cmd-body .ok   { color: #7bd88f; display: block; }
+.vsc-cmd-body .warn { color: #e5c07b; display: block; }
+
+/* Success banner (last assistant line) */
+.vsc-success {
+  background: linear-gradient(90deg, rgba(123,216,143,0.12), rgba(95,181,252,0.08));
+  border-left: 2px solid #7bd88f;
+  padding: 0.9vh 0.9vw;
+  margin: 1vh 0 0.6vh;
+  border-radius: 4px;
+  color: #e8e8e8;
+  font-family: var(--font-mono);
+  font-size: 0.68vw;
+  line-height: 1.55;
+}
+.vsc-success a { color: #5fb5fc; text-decoration: underline; }
+
+/* Action icons under assistant response */
+.vsc-actions {
+  display: flex; gap: 0.9vw;
+  color: #6f6f75;
+  margin: 0.5vh 0 0.3vh;
+}
+.vsc-actions svg { width: 0.82vw; height: 0.82vw; }
+
+/* Model footer */
+.vsc-model {
+  display: flex; justify-content: flex-end;
+  color: #7d7d85;
+  font-size: 0.58vw;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  margin: 0.2vh 0 0.6vh;
+}
+
+/* Bottom input area */
+.vsc-input {
+  margin: 0.6vh 1vw;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  background: #1f1f1f;
+  padding: 1vh 0.9vw 0.7vh;
+}
+.vsc-input-placeholder {
+  color: #6c6c73;
+  font-size: 0.72vw;
+  padding-bottom: 1vh;
+}
+.vsc-input-row {
+  display: flex; align-items: center; gap: 0.6vw;
+  font-size: 0.6vw;
+  color: #a0a0a8;
+}
+.vsc-chip {
+  display: inline-flex; align-items: center; gap: 0.25vw;
+  padding: 0.25vh 0.45vw;
+  border-radius: 4px;
+}
+.vsc-chip.plus { color: #a0a0a8; }
+.vsc-chip .caret { font-size: 0.5vw; opacity: 0.7; }
+.vsc-send {
+  margin-left: auto;
+  width: 1.1vw; height: 1.1vw;
+  border-radius: 50%;
+  background: #333;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #d4d4d4;
+  font-size: 0.7vw;
+}
+
+/* Status bar */
+.vsc-status {
+  border-top: 1px solid #242424;
+  padding: 0.6vh 1vw;
+  display: flex; gap: 1.3vw;
+  font-size: 0.58vw;
+  color: #7d7d85;
+}
+.vsc-status .chip { display: inline-flex; align-items: center; gap: 0.3vw; }
+
+/* Compact variant (for narrow setup col on slide 9) */
+.vscode-chat.compact .vsc-tabs  { padding: 0.7vh 0.7vw 0; gap: 0.8vw; }
+.vscode-chat.compact .vsc-tab   { font-size: 0.5vw; padding: 0.5vh 0 0.7vh; }
+.vscode-chat.compact .vsc-title { padding: 0.9vh 0.7vw; font-size: 0.55vw; }
+.vscode-chat.compact .vsc-body  { padding: 0.4vh 0.7vw 0.8vh; font-size: 0.65vw; }
+.vscode-chat.compact .vsc-user-bubble { font-size: 0.62vw; padding: 0.6vh 0.7vw; }
+.vscode-chat.compact .vsc-ai    { font-size: 0.62vw; margin: 0.4vh 0 0.6vh; }
+.vscode-chat.compact .vsc-cmd-body { font-size: 0.55vw; padding: 0.4vh 0.55vw; }
+.vscode-chat.compact .vsc-cmd-head { font-size: 0.48vw; padding: 0.4vh 0.55vw; }
+.vscode-chat.compact .vsc-success { font-size: 0.58vw; padding: 0.6vh 0.7vw; }
+
+/* Browser page content (authorize / success) */
+.browser-page {
+  padding: 2vh 1vw;
+  background: white;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1.2vh;
+}
+.browser-page .gh-brand {
+  width: 2.2vw; height: 2.2vw;
+  min-width: 28px; min-height: 28px;
+  color: #1F2328;
+}
+.browser-page h3 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95vw;
+  color: #1F2328;
+  margin: 0;
+}
+.browser-page p {
+  font-family: var(--font-body);
+  font-size: 0.72vw;
+  color: #57606A;
+  margin: 0;
+  max-width: 85%;
+  line-height: 1.5;
+}
+.code-entry {
+  display: flex;
+  gap: 0.35vw;
+  justify-content: center;
+  align-items: center;
+  margin: 0.6vh 0;
+}
+.cb {
+  width: 1.8vw;
+  height: 2.6vh;
+  min-width: 22px; min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #D0D7DE;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.95vw;
+  font-weight: 600;
+  color: #1F2328;
+  background: white;
+}
+.cb-sep {
+  font-family: var(--font-mono);
+  font-size: 1.1vw;
+  color: #8C959F;
+  padding: 0 0.05vw;
+}
+.gh-continue {
+  background: #2DA44E;
+  color: white;
+  border: none;
+  padding: 0.55vh 1.4vw;
+  border-radius: 5px;
+  font-family: var(--font-body);
+  font-size: 0.72vw;
+  font-weight: 500;
+  cursor: default;
+  margin-top: 0.3vh;
+}
+.gh-check {
+  width: 2.2vw; height: 2.2vw;
+  min-width: 30px; min-height: 30px;
+  border-radius: 50%;
+  background: transparent;
+  color: #2DA44E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1vw;
+  font-weight: 700;
+}
+
+/* Terminal mock body */
+.terminal {
+  background: #1E1E1E;
+  color: #D4D4D4;
+  padding: 1.4vh 1vw;
+  font-family: var(--font-mono);
+  font-size: 0.72vw;
+  line-height: 1.65;
+  flex: 1;
+}
+.terminal .tm-line { margin: 0; word-break: break-word; }
+.terminal .tm-line.dim { color: #7C7C82; }
+.terminal .tm-line .cmd { color: #E6E6E6; }
+.terminal .tm-line.prompt::before { content: '$ '; color: #66D9EF; }
+.terminal .tm-line.status { color: #C5A575; }
+.terminal .tm-line.success {
+  color: #A6E22E;
+  font-weight: 600;
+  padding: 0.4vh 0;
+  font-size: 0.9vw;
+  letter-spacing: -0.01em;
+}
+
+/* Setup flow layout (slide 7) */
+.setup-flow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.4vw;
+  margin: 2.5vh 0 2.5vh;
+}
+.setup-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+.setup-label {
+  font-family: var(--font-body);
+  font-size: 0.8vw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 600;
+  text-align: center;
+}
+.setup-col:nth-child(2) .setup-label { color: var(--accent); }
+.setup-col .win-mock { height: 34vh; }
+.setup-col .vscode-chat { height: 34vh; border-radius: 10px; box-shadow: 0 8px 22px -8px rgba(0,0,0,0.2); }
+.setup-col .vsc-body { overflow: hidden; }
+
+/* Hero mock · one big window per slide (for 9a/b/c splits) */
+.hero-mock {
+  display: flex;
+  justify-content: center;
+  margin: 2vh auto 0;
+  max-width: 60vw;
+}
+.hero-mock .win-mock,
+.hero-mock .vscode-chat {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 16px 42px -14px rgba(0,0,0,0.3);
+}
+.hero-mock .win-mock  { height: 58vh; }
+.hero-mock .vscode-chat { height: 58vh; }
+
+/* Split mock: two window mocks side-by-side with an arrow between */
+.split-mock-layout {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1vw;
+  align-items: center;
+  max-width: 74vw;
+  margin: 2vh auto 0;
+}
+.split-mock-layout .win-mock {
+  width: 100%;
+  height: 46vh;
+  border-radius: 10px;
+  box-shadow: 0 14px 36px -14px rgba(0,0,0,0.3);
+}
+.split-mock-layout .vscode-editor,
+.split-mock-layout .vscode-chat {
+  width: 100%;
+  height: 46vh;
+  border-radius: 10px;
+  box-shadow: 0 14px 36px -14px rgba(0,0,0,0.3);
+}
+.sm-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6vh;
+  color: var(--accent);
+}
+.sm-arrow svg {
+  width: 2.6vw;
+  min-width: 36px;
+}
+.sm-arrow-lbl {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.7vw;
+  color: var(--accent);
+  white-space: nowrap;
+}
+/* Editor + chat mock shrinking inside split-mock-layout */
+.split-mock-layout .vscode-editor .ve-sidebar { display: none; }
+.split-mock-layout .vscode-editor .ve-activity { width: 1.7vw; }
+.split-mock-layout .vscode-editor .ve-activity .act { font-size: 0.7vw; }
+.split-mock-layout .vscode-editor .ve-tab { font-size: 0.58vw; }
+.split-mock-layout .vscode-editor .ve-code {
+  font-size: 0.56vw;
+  line-height: 1.55;
+  flex: 1;
+  padding: 1vh 0 1.5vh;
+}
+.split-mock-layout .vscode-editor .ve-pane { display: flex; flex-direction: column; }
+.ve-statusbar {
+  display: flex;
+  align-items: center;
+  background: #005FB8;
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 0.5vw;
+  padding: 0.38vh 0.7vw;
+  gap: 0.7vw;
+  letter-spacing: 0.02em;
+}
+.ve-statusbar .ve-sb-left,
+.ve-statusbar .ve-sb-right {
+  display: flex;
+  align-items: center;
+  gap: 0.7vw;
+}
+.ve-statusbar .ve-sb-right { margin-left: auto; }
+.ve-statusbar .ve-sb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18vw;
+  white-space: nowrap;
+  opacity: 0.92;
+}
+.ve-statusbar .ve-sb-accent {
+  background: rgba(255,255,255,0.15);
+  padding: 0 0.4vw;
+  border-radius: 2px;
+  opacity: 1;
+}
+.split-mock-layout .vscode-editor .ve-line {
+  grid-template-columns: 1.6vw 0.8vw 1fr;
+}
+.split-mock-layout .vscode-editor .ve-linenum { font-size: 0.5vw; }
+/* Diff lines (del/add) wrap so students can read the full changed subtitle */
+.split-mock-layout .vscode-editor .ve-line.del,
+.split-mock-layout .vscode-editor .ve-line.add {
+  align-items: start;
+}
+.split-mock-layout .vscode-editor .ve-line.del .ve-src,
+.split-mock-layout .vscode-editor .ve-line.add .ve-src {
+  white-space: pre-wrap;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+}
+
+/* Hero browser inner content larger */
+.hero-mock .browser-page h3 { font-size: 1.5vw; }
+.hero-mock .browser-page p  { font-size: 0.95vw; max-width: 34vw; }
+.hero-mock .browser-page .code-entry .cb { width: 2.2vw; height: 2.6vw; font-size: 1.3vw; }
+.hero-mock .browser-page .gh-check { width: 4vw; height: 4vw; font-size: 2vw; }
+.hero-mock .browser-page .gh-brand { width: 2.8vw; height: 2.8vw; }
+.hero-mock .browser-page .gh-continue { padding: 1vh 1.6vw; font-size: 1vw; }
+
+/* VS Code approval mode dropdown mock (slide 10b) */
+.mode-mock {
+  display: flex;
+  justify-content: center;
+  margin: 2vh auto 0;
+  gap: 2vw;
+  align-items: flex-start;
+  max-width: 62vw;
+}
+.mode-dropdown {
+  background: #1f1f1f;
+  border: 1px solid #2f2f34;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 16px 42px -14px rgba(0,0,0,0.4);
+  width: 26vw;
+  color: #e0e0e0;
+}
+.md-trigger {
+  padding: 1vh 1vw;
+  display: flex; align-items: center; gap: 0.5vw;
+  font-family: var(--font-mono);
+  font-size: 0.78vw;
+  background: #2a2a2a;
+  border-bottom: 1px solid #333;
+  color: #FFC93D;
+}
+.md-trigger .md-caret { margin-left: auto; color: #7d7d85; }
+.md-menu { padding: 0.5vh 0; }
+.md-item {
+  display: flex; align-items: flex-start; gap: 0.7vw;
+  padding: 1vh 1vw;
+  border-bottom: 1px solid #262626;
+  cursor: default;
+}
+.md-item:last-child { border-bottom: none; }
+.md-item.active { background: #2c2c30; }
+.md-icon {
+  width: 1.4vw; height: 1.4vw; min-width: 18px; min-height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #7d7d85;
+  font-size: 0.9vw;
+  flex-shrink: 0;
+  margin-top: 0.2vh;
+}
+.md-item.active .md-icon { color: #FFC93D; }
+.md-text .md-title {
+  font-family: var(--font-body);
+  font-size: 0.85vw;
+  font-weight: 600;
+  color: #eee;
+  margin-bottom: 0.3vh;
+}
+.md-text .md-desc {
+  font-family: var(--font-body);
+  font-size: 0.72vw;
+  color: #9da0a5;
+  line-height: 1.4;
+}
+.md-footer {
+  padding: 0.8vh 1vw;
+  background: #181818;
+  border-top: 1px solid #262626;
+  font-family: var(--font-body);
+  font-size: 0.7vw;
+  color: #8db9ff;
+}
+
+/* Two-card prep layout (slide 8a) */
+.prep-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2vw;
+  margin: 1.8vh auto 0;
+  max-width: 62vw;
+  align-items: stretch;
+}
+.prep-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 22px -8px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.prep-card .prep-head {
+  padding: 1.1vh 1.2vw;
+  background: #F6F8FA;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 0.6vw;
+}
+.prep-card .prep-icon {
+  width: 1.8vw; height: 1.8vw;
+  min-width: 22px; min-height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  font-size: 1vw;
+  font-weight: 700;
+}
+.prep-card .prep-icon.auto { background: #FFC93D; color: #5E4308; }
+.prep-card .prep-icon.clone { background: #DEEBFF; color: #1F5DB2; }
+.prep-card .prep-icon.find { background: #E5F3E8; color: #2D7A3F; }
+.prep-card .prep-icon.model { background: #EEE0FF; color: #5A2CA0; }
+
+/* Model hero + alternatives (slide 7a) */
+.model-hero {
+  margin: 0.6vh 0 0.8vh;
+  padding: 1vh 1vw;
+  background: linear-gradient(135deg, #FFF6E6 0%, #FFFBF0 100%);
+  border: 2px solid #FFC93D;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px -4px rgba(255,201,61,0.4);
+  position: relative;
+}
+.mh-badge {
+  position: absolute;
+  top: -0.9vh;
+  left: 0.8vw;
+  background: #FFC93D;
+  color: #5E4308;
+  padding: 0.2vh 0.6vw;
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-size: 0.6vw;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mh-name {
+  font-family: var(--font-display);
+  font-size: 1.4vw;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  margin-top: 0.2vh;
+}
+.mh-via {
+  font-family: var(--font-body);
+  font-size: 0.74vw;
+  color: var(--mute);
+  font-style: italic;
+  margin-top: 0.1vh;
+}
+.model-alts-label {
+  font-family: var(--font-body);
+  font-size: 0.64vw;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin: 0.4vh 0 0.3vh;
+  font-weight: 600;
+}
+.model-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4vh 0.9vw;
+}
+.model-list.alts {
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.3vh 0.5vw;
+}
+.model-list li {
+  font-family: var(--font-body);
+  font-size: 0.76vw;
+  color: var(--ink);
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  padding: 0.35vh 0.5vw;
+  background: #F6F8FA;
+  border-radius: 3px;
+  border-left: 2px solid var(--mute-soft);
+}
+.model-list .ml-name { font-weight: 500; font-size: 0.72vw; }
+.model-list .ml-via {
+  font-family: var(--font-body);
+  font-size: 0.6vw;
+  color: var(--mute);
+}
+
+/* Picker mock, dropdown preview for slide 7a (model picker, approvals picker) */
+.picker-mock {
+  margin: 0.6vh 0 0;
+  background: #252526;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  box-shadow: 0 8px 22px -6px rgba(0,0,0,0.45);
+  font-family: var(--font-mono);
+  font-size: 0.66vw;
+  color: #d4d4d8;
+  overflow: hidden;
+}
+.picker-mock .pm-search {
+  padding: 0.55vh 0.8vw;
+  border-bottom: 1px solid #3a3a3a;
+  color: #8e8e92;
+  font-size: 0.58vw;
+  display: flex;
+  align-items: center;
+  gap: 0.4vw;
+  letter-spacing: 0.04em;
+}
+.picker-mock .pm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5vw;
+  padding: 0.5vh 0.8vw;
+  color: #c9c9cf;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.picker-mock .pm-row:last-child { border-bottom: none; }
+.picker-mock .pm-row.active {
+  background: rgba(184,68,38,0.26);
+  color: #f6f6f8;
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.picker-mock .pm-row.active .pm-mark { color: var(--accent); font-weight: 700; }
+.picker-mock .pm-mark {
+  width: 0.9vw;
+  display: inline-block;
+  text-align: center;
+  color: #6e6e76;
+  font-size: 0.68vw;
+}
+.picker-mock .pm-name { flex: 1; font-weight: 500; }
+.picker-mock .pm-via { color: #8e8e92; font-size: 0.58vw; font-style: italic; }
+
+/* OS path instructions (slide 8a right card) */
+.path-os {
+  padding: 0.8vh 0;
+  border-bottom: 1px dashed var(--line);
+}
+.path-os:last-of-type { border-bottom: none; padding-bottom: 0.3vh; }
+.path-os-label {
+  font-family: var(--font-body);
+  font-size: 0.86vw;
+  color: var(--ink);
+  margin-bottom: 0.3vh;
+}
+.path-os-tip {
+  font-family: var(--font-body);
+  font-size: 0.78vw;
+  color: var(--mute);
+  line-height: 1.5;
+}
+.path-os-tip kbd {
+  font-family: var(--font-mono);
+  background: #F1F1F3;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0.05vh 0.35vw;
+  font-size: 0.72vw;
+  color: var(--ink);
+}
+.path-os-tip em { font-style: normal; color: var(--ink); font-weight: 500; }
+
+/* Demoted Clone-prompt aside (below the two main prep cards) */
+.clone-aside {
+  margin: 1.8vh auto 0;
+  max-width: 62vw;
+  padding: 0.9vh 1.2vw;
+  background: transparent;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.8vw;
+  font-family: var(--font-body);
+  font-size: 0.82vw;
+  color: var(--mute);
+  line-height: 1.45;
+}
+.ca-dot {
+  color: var(--mute-soft);
+  font-size: 0.82vw;
+  flex-shrink: 0;
+}
+.ca-text {
+  flex: 1;
+}
+.ca-text strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.ca-text code {
+  font-family: var(--font-mono);
+  background: #F1F1F3;
+  padding: 0.1vh 0.3vw;
+  border-radius: 3px;
+  font-size: 0.76vw;
+  color: var(--ink);
+}
+.ca-btns {
+  display: flex;
+  gap: 0.5vw;
+  flex-shrink: 0;
+}
+.ca-btn {
+  font-family: var(--font-body);
+  font-size: 0.72vw;
+  padding: 0.5vh 0.7vw;
+  border-radius: 5px;
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--mute);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.ca-btn:hover { color: var(--ink); border-color: var(--mute-soft); }
+.ca-btn.primary {
+  background: #F6F8FA;
+  color: var(--ink);
+}
+.ca-btn.primary:hover { background: #ECECEF; border-color: var(--mute-soft); }
+.prep-card .prep-title {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1vw;
+  color: var(--ink);
+  flex: 1;
+}
+.prep-card .prep-hint {
+  font-family: var(--font-body);
+  font-size: 0.72vw;
+  color: var(--mute);
+  font-style: italic;
+}
+.prep-card .prep-body {
+  padding: 1.2vh 1.2vw;
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 0.82vw;
+  line-height: 1.5;
+  color: var(--ink);
+  display: flex; flex-direction: column; gap: 0.9vh;
+}
+.prep-card .prep-body code {
+  font-family: var(--font-mono);
+  background: #F1F1F3;
+  padding: 0.1vh 0.3vw;
+  border-radius: 3px;
+  font-size: 0.74vw;
+}
+.prep-card .prep-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7vw;
+  padding: 1vh 1.2vw 1.2vh;
+  background: #FAFAFC;
+  border-top: 1px solid var(--line);
+}
+
+/* Prompt 2.2 preview (slide 8b), shows prompt text with editable line highlighted */
+.prompt-preview {
+  background: #1f1f1f;
+  color: #dcdcdc;
+  border-radius: 10px;
+  padding: 1.4vh 1.4vw;
+  margin: 0 auto;
+  max-width: 58vw;
+  font-family: var(--font-mono);
+  font-size: 0.7vw;
+  line-height: 1.65;
+  box-shadow: 0 14px 36px -12px rgba(0,0,0,0.35);
+  position: relative;
+}
+.pp-line { color: #9da0a5; }
+.pp-line.hl {
+  background: rgba(255,201,61,0.15);
+  border-left: 2px solid #FFC93D;
+  padding-left: 0.5vw;
+  color: #fff;
+}
+.pp-line.hl .val { color: #7bd88f; }
+.pp-line .cmt { color: #6c6c73; }
+.pp-comment {
+  color: #6c6c73;
+  font-style: italic;
+}
+.pp-section {
+  color: #e5c07b;
+  margin-top: 0.5vh;
+}
+.pp-badge {
+  display: inline-block;
+  margin-left: 0.7vw;
+  padding: 0.1vh 0.5vw;
+  background: #FFC93D;
+  color: #5E4308;
+  font-family: var(--font-body);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.62vw;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+/* Merged 8a · path-discovery + prompt-preview side by side */
+.path-prompt-layout {
+  display: grid;
+  grid-template-columns: 0.85fr auto 1.7fr;
+  gap: 1.4vw;
+  margin: 1.6vh auto 0;
+  max-width: 72vw;
+  align-items: stretch;
+}
+.path-prompt-layout .pp-left {
+  display: flex;
+  flex-direction: column;
+}
+.path-prompt-layout .pp-right {
+  margin: 0;
+  max-width: none;
+  padding: 1.2vh 1.1vw;
+  font-size: 0.68vw;
+  line-height: 1.6;
+}
+.pp-arrow-col {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5vh;
+}
+.pp-arrow-col svg {
+  width: 2.6vw;
+  min-width: 38px;
+}
+.pp-arrow-lbl {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.66vw;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* Why-it-matters note next to dropdown */
+.why-note {
+  flex: 1;
+  padding: 1.8vh 1.6vw;
+  background: white;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.92vw;
+  line-height: 1.55;
+  color: var(--ink);
+  max-width: 32vw;
+}
+.why-note h4 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1vw;
+  margin: 0 0 0.7vh;
+  color: var(--accent);
+}
+.why-note p { margin: 0.5vh 0; }
+.why-note code {
+  font-family: var(--font-mono);
+  background: #F1F1F3;
+  padding: 0.05vh 0.3vw;
+  border-radius: 3px;
+  font-size: 0.82vw;
+}
+
+/* Workflow hero (each step its own slide, slides 6/7/8) */
+.workflow-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5vh;
+  margin-top: 2vh;
+}
+.wh-shot {
+  width: 100%;
+  max-width: 62vw;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 14px 36px -10px rgba(0,0,0,0.18);
+  background: white;
+}
+.wh-shot.accent {
+  border-color: rgba(184,68,38,0.35);
+  box-shadow: 0 14px 36px -10px rgba(184,68,38,0.25);
+}
+.wh-shot img {
+  width: 100%;
+  height: auto;
+  max-height: 52vh;
+  object-fit: contain;
+  display: block;
+}
+.wh-caption {
+  font-family: var(--font-display);
+  font-size: 1.3vw;
+  font-style: italic;
+  font-weight: 380;
+  color: var(--mute);
+  text-align: center;
+  max-width: 52em;
+  line-height: 1.5;
+  margin: 0;
+}
+.wh-caption em { color: var(--accent); font-style: italic; }
+
+/* Live dashboard mock (mirrors docs/index.html of the real demo) */
+.live-mock {
+  flex: 1;
+  background: white;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  color: #0F172A;
+  min-height: 0;
+}
+.live-disclaimer {
+  background: #FEF3C7;
+  border-bottom: 2px solid #F59E0B;
+  padding: 0.6vh 1.2vw;
+  color: #B45309;
+  font-size: 0.7vw;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+}
+.live-disclaimer strong { font-weight: 600; }
+.live-nav {
+  padding: 0.8vh 1.4vw;
+  background: rgba(255,255,255,0.97);
+  border-bottom: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1vw;
+}
+.live-nav-brand {
+  font-weight: 600;
+  font-size: 0.82vw;
+  color: #0F172A;
+  letter-spacing: -0.01em;
+}
+.live-nav-brand .tag {
+  display: inline-block;
+  margin-left: 0.4vw;
+  padding: 0.1vh 0.45vw;
+  background: #F0FDFA;
+  color: #0D9488;
+  border-radius: 3px;
+  font-size: 0.6vw;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.live-nav-links {
+  display: flex;
+  gap: 0.9vw;
+  font-size: 0.7vw;
+  color: #475569;
+  font-weight: 500;
+}
+.live-nav-links a { color: #475569; text-decoration: none; }
+.live-hero {
+  padding: 3vh 1.6vw 1.6vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9vh;
+  min-height: 0;
+}
+.live-eyebrow {
+  font-size: 0.62vw;
+  font-weight: 600;
+  color: #0D9488;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.live-h1 {
+  font-size: 2.1vw;
+  font-weight: 700;
+  color: #0F172A;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+.live-subtitle {
+  font-size: 1vw;
+  color: #475569;
+  font-weight: 400;
+  margin: 0;
+  transition: color 0.3s;
+}
+.live-subtitle.old {
+  text-decoration: line-through;
+  text-decoration-color: rgba(220,38,38,0.5);
+  color: #94A3B8;
+}
+.live-subtitle.new {
+  color: #0D9488;
+  font-weight: 500;
+  background: #F0FDFA;
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
+  align-self: flex-start;
+  border: 1px solid rgba(13,148,136,0.2);
+}
+
+/* Diff arrow between old and new subtitle (slide 6d) */
+.live-subtitle-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vh;
+  position: relative;
+  margin: 0.2vh 0 0.4vh;
+}
+.live-subtitle-diff .live-subtitle { margin: 0; }
+.live-subtitle-diff .diff-arrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5vw;
+  padding-left: 0.4vw;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.64vw;
+  color: #B84426;
+  font-weight: 500;
+}
+.live-subtitle-diff .diff-arrow svg {
+  width: 1vw;
+  height: 1vw;
+  min-width: 14px; min-height: 14px;
+  color: #B84426;
+}
+.live-subtitle-diff .diff-arrow code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(184,68,38,0.08);
+  padding: 0.05vh 0.3vw;
+  border-radius: 3px;
+  font-size: 0.62vw;
+  color: #B84426;
+}
+.live-meta {
+  display: flex;
+  gap: 1.2vw;
+  font-size: 0.68vw;
+  color: #94A3B8;
+  margin-top: 0.6vh;
+  flex-wrap: wrap;
+}
+.live-meta strong { color: #0F172A; font-weight: 600; }
+.live-hint {
+  margin-top: auto;
+  padding-top: 1vh;
+  font-size: 0.64vw;
+  color: #94A3B8;
+  font-style: italic;
+}
+
+/* Workflow mocks: dashboard + VS Code editor (replace screenshots for 6a/6b/6d) */
+.workflow-hero .win-mock {
+  width: 100%;
+  max-width: 64vw;
+  height: 50vh;
+  border-radius: 10px;
+}
+.workflow-hero .win-mock.accent {
+  border-color: rgba(184,68,38,0.35);
+  box-shadow: 0 14px 36px -10px rgba(184,68,38,0.25);
+}
+
+/* Dashboard mock · goes inside .win-mock */
+.dashboard-mock {
+  flex: 1;
+  background: white;
+  padding: 2vh 1.8vw;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6vh;
+  overflow: hidden;
+  min-height: 0;
+}
+.db-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vh;
+  padding-bottom: 1vh;
+  border-bottom: 1px solid var(--line);
+}
+.db-title {
+  font-family: var(--font-display);
+  font-size: 1.4vw;
+  font-weight: 420;
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+.db-subtitle {
+  font-family: var(--font-body);
+  font-size: 0.88vw;
+  color: var(--mute);
+  font-style: italic;
+  margin: 0;
+}
+.db-subtitle.changed {
+  color: var(--accent);
+  font-weight: 500;
+  font-style: normal;
+  background: rgba(184,68,38,0.1);
+  padding: 0.3em 0.5em;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+.db-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.7vw;
+}
+.db-stat {
+  padding: 0.9vh 0.9vw;
+  background: #F6F8FA;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.db-stat-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.58vw;
+  color: var(--mute);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.db-stat-value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.5vw;
+  font-weight: 400;
+  color: var(--ink);
+  margin-top: 0.2vh;
+  letter-spacing: -0.02em;
+}
+.db-chart {
+  flex: 1;
+  background: #FAFAFC;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1.2vh 1.2vw;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7vh;
+}
+.db-chart-title {
+  font-family: var(--font-body);
+  font-size: 0.72vw;
+  color: var(--ink);
+  font-weight: 500;
+}
+.db-chart-svg {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+/* VS Code editor mock · goes inside .win-mock.dark */
+.vscode-editor {
+  flex: 1;
+  background: #1e1e1e;
+  display: grid;
+  grid-template-columns: 2.4vw 12vw 1fr;
+  overflow: hidden;
+  min-height: 0;
+}
+.ve-activity {
+  background: #181818;
+  padding: 1vh 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4vh;
+  align-items: center;
+  border-right: 1px solid #252525;
+}
+.ve-activity .act {
+  width: 1.1vw;
+  height: 1.1vw;
+  color: #858585;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85vw;
+  position: relative;
+}
+.ve-activity .act.active {
+  color: #ffffff;
+}
+.ve-activity .act.active::before {
+  content: "";
+  position: absolute;
+  left: -0.7vw;
+  top: -0.3vh;
+  bottom: -0.3vh;
+  width: 2px;
+  background: #ffffff;
+}
+.ve-sidebar {
+  background: #1f1f1f;
+  padding: 0.9vh 0.4vw;
+  border-right: 1px solid #252525;
+  overflow: hidden;
+}
+.ve-sidebar h5 {
+  font-family: var(--font-body);
+  font-size: 0.56vw;
+  color: #858585;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.8vh;
+  font-weight: 500;
+  padding-left: 0.3vw;
+}
+.ve-item {
+  padding: 0.25vh 0.3vw;
+  color: #cccccc;
+  font-family: var(--font-body);
+  font-size: 0.66vw;
+  display: flex;
+  align-items: center;
+  gap: 0.3vw;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.ve-item.folder::before {
+  content: "▸ ";
+  color: #858585;
+  font-size: 0.58vw;
+}
+.ve-item.folder.open::before { content: "▾ "; }
+.ve-item.file {
+  padding-left: 0.9vw;
+}
+.ve-item.file::before {
+  content: "";
+  width: 0.7vw;
+  height: 0.7vw;
+  background: #858585;
+  mask: radial-gradient(circle, black 40%, transparent 40%);
+  -webkit-mask: radial-gradient(circle, black 40%, transparent 40%);
+  display: none;
+}
+.ve-item.active {
+  background: #37373d;
+  color: white;
+}
+
+.ve-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ve-tabs {
+  background: #252526;
+  display: flex;
+  border-bottom: 1px solid #1e1e1e;
+  flex-shrink: 0;
+}
+.ve-tab {
+  padding: 0.7vh 1vw;
+  font-family: var(--font-body);
+  font-size: 0.68vw;
+  color: #8b8b8b;
+  background: #2d2d2e;
+  border-right: 1px solid #1e1e1e;
+}
+.ve-tab.active {
+  background: #1e1e1e;
+  color: white;
+  border-top: 1px solid #5fb5fc;
+  padding-top: calc(0.7vh - 1px);
+}
+.ve-code {
+  padding: 1vh 0;
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.68vw;
+  line-height: 1.85;
+  overflow: hidden;
+}
+.ve-line {
+  display: grid;
+  grid-template-columns: 2.2vw 1vw 1fr;
+  color: #d4d4d4;
+  align-items: baseline;
+  padding-right: 0.5vw;
+}
+.ve-linenum {
+  color: #6c6c73;
+  text-align: right;
+  padding-right: 0.5vw;
+  font-family: var(--font-mono);
+}
+.ve-gut {
+  color: transparent;
+  font-weight: 700;
+  text-align: center;
+}
+.ve-line.del { background: rgba(198,55,55,0.22); }
+.ve-line.del .ve-gut { color: #F47878; }
+.ve-line.add { background: rgba(30,107,52,0.3); }
+.ve-line.add .ve-gut { color: #7bd88f; }
+.ve-src { padding-left: 0.3vw; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+/* Python syntax */
+.ve-kw { color: #c586c0; }
+.ve-str { color: #ce9178; }
+.ve-var { color: #9cdcfe; }
+.ve-fn { color: #dcdcaa; }
+.ve-num { color: #b5cea8; }
+.ve-cmt { color: #6a9955; font-style: italic; }
+.ve-op { color: #d4d4d4; }
+.wh-caption .code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: rgba(0,0,0,0.04);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* Vertical storyboard (legacy · retained for safety) */
+.storyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vh;
+  margin-top: 2vh;
+}
+.sb-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 2.4vw;
+  align-items: center;
+  padding: 1.2vh 0;
+}
+.sb-shot {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px -6px rgba(0,0,0,0.12);
+  background: white;
+}
+.sb-shot.accent {
+  border-color: rgba(184,68,38,0.3);
+  box-shadow: 0 6px 18px -6px rgba(184,68,38,0.18);
+}
+.sb-shot img {
+  width: 100%;
+  height: 22vh;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.sb-text { padding: 0; }
+.sb-text .sb-num {
+  font-family: var(--font-display);
+  font-size: 3.4vw;
+  font-weight: 200;
+  line-height: 0.9;
+  color: var(--mute-soft);
+}
+.sb-text .sb-num.accent { color: var(--accent); }
+.sb-text .sb-label {
+  font-family: var(--font-body);
+  font-size: 0.82vw;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 600;
+  margin-top: 1vh;
+}
+.sb-text .sb-label.accent { color: var(--accent); }
+.sb-text p {
+  font-family: var(--font-display);
+  font-size: 1.15vw;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 1vh 0 0;
+  font-weight: 380;
+}
+.sb-text p em {
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 400;
+}
+.sb-text p .code {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  background: rgba(0,0,0,0.04);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.sb-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5vw;
+  font-family: var(--font-mono);
+  font-size: 0.76vw;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.sb-divider::before, .sb-divider::after {
+  content: '';
+  width: 2vw;
+  height: 1px;
+  background: var(--mute-soft);
+}
+.sb-divider .line-label {
+  padding: 0 0.3vw;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* URL preview pair (slide 5) */
+.url-previews {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2vw;
+  margin: 2vh 0 0;
+  align-items: start;
+}
+.url-preview {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px -8px rgba(0,0,0,0.15);
+  overflow: hidden;
+  max-height: 26vh;
+}
+.url-preview img {
+  width: 100%;
+  height: 26vh;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+.url-preview.live {
+  border-color: rgba(184,68,38,0.3);
+}
+.url-arrow {
+  font-family: var(--font-display);
+  font-size: 2.2vw;
+  font-weight: 200;
+  color: var(--mute-soft);
+  line-height: 1;
+}
+.handbook-card .url {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2.6vw;
+  letter-spacing: -0.022em;
+  line-height: 1.05;
+  margin: 0 0 1.4vh;
+  word-break: break-all;
+  color: var(--accent);
+}
+.handbook-card .url-sub {
+  font-size: 0.95vw;
+  color: var(--mute);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 50em;
+  margin-left: auto; margin-right: auto;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CHROME: progress + chapter strip + counter + hint
+   ───────────────────────────────────────────────────────────── */
+.progress {
+  position: absolute;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--accent);
+  z-index: 100;
+  transition: width .4s cubic-bezier(.22,1,.36,1);
+}
+
+/* Persistent chapter navigation strip */
+.chapter-strip {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 1vh 2.2vw 0.6vh;
+  z-index: 90;
+  background: rgba(245, 245, 247, 0.85);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  display: flex;
+  gap: 1.2vw;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 0.65vw;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ch-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35vw;
+  color: #B8BCC0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.ch-item:hover { color: var(--ink); }
+.ch-item.active { color: var(--accent); font-weight: 700; }
+.ch-num {
+  font-family: var(--font-mono);
+  font-size: 0.62vw;
+  opacity: 0.65;
+}
+.ch-item.active .ch-num { opacity: 1; }
+.ch-dots {
+  display: inline-flex;
+  gap: 0.22vw;
+  margin-left: 0.2vw;
+}
+.ch-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.3;
+}
+.ch-dot.active { opacity: 1; }
+.ch-sep {
+  width: 1px;
+  height: 0.9em;
+  background: rgba(0,0,0,0.08);
+}
+
+/* Push slide content down to avoid overlap with chapter strip */
+.deck-frame .slide { padding-top: 8vh; }
+.counter {
+  position: absolute;
+  bottom: 2.2vh; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.82vw;
+  letter-spacing: 0.22em;
+  color: var(--mute);
+  z-index: 100;
+  opacity: 0.6;
+}
+.hint {
+  position: absolute;
+  bottom: 6vh; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-body);
+  font-size: 0.82vw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mute);
+  z-index: 100;
+  animation: fade-in 2s ease .8s both;
+}
+.hint kbd {
+  font-family: var(--font-mono);
+  border: 1px solid var(--mute-soft);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin: 0 4px;
+  font-size: 0.9em;
+}
+@keyframes fade-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 0.6; transform: translate(-50%, 0); } }
+
+/* Dedicated nav buttons (bottom-right · the only click target that advances) */
+.nav-controls {
+  position: absolute;
+  bottom: 2vh;
+  right: 2vw;
+  display: flex;
+  gap: 0.5vw;
+  z-index: 150;
+}
+.nav-btn {
+  width: 2.4vw;
+  height: 2.4vw;
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.1vw;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px -4px rgba(0,0,0,0.12);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  padding: 0;
+}
+.nav-btn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  background: white;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE / small window guard
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .hero { font-size: 12vw; }
+  .statement { font-size: 9vw; }
+  .sub { font-size: 3.4vw; }
+  .caption { font-size: 2.2vw; }
+  .row, .row-3, .webrow, .split-2, .triplet { grid-template-columns: 1fr; gap: 2vh; }
+  .split-2 .divider { display: none; }
+  .card h2 { font-size: 8vw; }
+  .card li { font-size: 2.8vw; }
+  .webcard .body, .webcard .body h4 { font-size: 2.6vw; }
+  .split-big h3 { font-size: 9vw; }
+  .split-big .bigsym { font-size: 16vw; }
+  .split-big .list { font-size: 2.8vw; }
+  .stepslist .srow .sn { font-size: 8vw; }
+  .stepslist .srow .sbody h4 { font-size: 3vw; }
+  .stepslist .srow .sbody p { font-size: 2.6vw; }
+  .handbook-card .url { font-size: 6vw; }
+  .handbook-card .url-sub { font-size: 2.4vw; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="deck-frame" id="deckframe">
+
+<div class="progress" id="progress"></div>
+<nav class="chapter-strip" id="chapterStrip"></nav>
+<div class="counter" id="counter">1 / 9</div>
+<div class="hint"><kbd>←</kbd> <kbd>→</kbd> to navigate · <kbd>F</kbd> fullscreen</div>
+<div class="nav-controls">
+  <button class="nav-btn" id="navPrev" type="button" aria-label="Previous slide">←</button>
+  <button class="nav-btn" id="navNext" type="button" aria-label="Next slide">→</button>
+</div>
+
+<main class="deck" id="deck">
+
+<!-- 1 · COVER -->
+<section class="slide active" data-counter="1">
+  <div class="slide-inner center">
+    <div class="kicker">POLI 3148 · THE UNIVERSITY OF HONG KONG</div>
+    <h1 class="hero">Make your files<br>visible to the <em>world</em>.</h1>
+    <p class="meta">
+      Kaidierdan Muzhapaer
+      <span class="sep">·</span>
+      Week 13 Lab
+      <span class="sep">·</span>
+      April 23, 2026
+    </p>
+  </div>
+</section>
+
+<!-- 2 · PART ONE · What is Git? -->
+<section class="slide" data-counter="2">
+  <div class="slide-inner">
+    <div class="kicker center">Version control with Git</div>
+    <h2 class="statement center" style="text-align:center; font-size: 3.2vw; margin-bottom: 1vh;">Git tracks <em>every version</em><br>of your files.</h2>
+    <div class="webrow" style="grid-template-columns: repeat(4, 1fr); max-width: 62vw;">
+      <div class="webslot">
+        <div class="commit-label"><span class="hash">v1</span><span class="msg">initial</span></div>
+        <div class="webcard">
+          <div class="body">
+            <p>University of Hong Kong</p>
+            <p>is in Pokfulam.</p>
+          </div>
+        </div>
+      </div>
+      <div class="webslot">
+        <div class="commit-label"><span class="hash">v2</span><span class="msg">add full name</span></div>
+        <div class="webcard">
+          <div class="body">
+            <p><span class="add">The</span> University of Hong Kong</p>
+            <p>is in Pokfulam<span class="add">, Hong Kong</span>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="webslot">
+        <div class="commit-label"><span class="hash">v3</span><span class="msg">fix verb</span></div>
+        <div class="webcard">
+          <div class="body">
+            <p>The University of Hong Kong</p>
+            <p><span class="del">is in</span><span class="add">is located in</span> Pokfulam, Hong Kong.</p>
+          </div>
+        </div>
+      </div>
+      <div class="webslot">
+        <div class="commit-label"><span class="hash">v4</span><span class="msg">add founding year</span></div>
+        <div class="webcard">
+          <div class="body">
+            <p>The University of Hong Kong</p>
+            <p>is located in Pokfulam, Hong Kong.</p>
+            <p class="add">Founded in 1911.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="commit-graph" style="max-width: 62vw;">
+      <div class="cg-node"><div class="cg-dot"></div><div class="cg-hash">v1</div></div>
+      <div class="cg-node"><div class="cg-dot"></div><div class="cg-hash">v2</div></div>
+      <div class="cg-node"><div class="cg-dot"></div><div class="cg-hash">v3</div></div>
+      <div class="cg-node latest"><div class="cg-dot"></div><div class="cg-latest">v4 · latest</div></div>
+    </div>
+    <p class="caption center" style="text-align:center; margin-top: 3vh;"><strong>All four versions live on your computer, at once.</strong></p>
+  </div>
+</section>
+
+<!-- 3 · PART TWO · What is GitHub? -->
+<section class="slide" data-counter="3">
+  <div class="slide-inner">
+    <div class="kicker center">Git and GitHub</div>
+    <h2 class="statement center" style="text-align:center; font-size: 3.2vw; margin-bottom: 1vh;">Git runs <em>locally</em>.<br>GitHub hosts code <em>in the cloud</em>.</h2>
+    <div class="platform-split">
+      <div class="ps-card">
+        <svg class="ps-icon" viewBox="0 0 120 80" fill="none" stroke="#1D1D1F" stroke-width="1.8" stroke-linejoin="round">
+          <!-- laptop body -->
+          <rect x="12" y="8" width="96" height="58" rx="4" fill="#F4F4F6"/>
+          <rect x="18" y="14" width="84" height="46" fill="white" stroke="#D4D4D8" stroke-width="1"/>
+          <!-- commit graph inside screen: 4 dots + vertical line + commit-message bars -->
+          <line x1="28" y1="22" x2="28" y2="54" stroke="#B84426" stroke-width="1.3"/>
+          <circle cx="28" cy="22" r="2.6" fill="#B84426" stroke="none"/>
+          <rect x="34" y="20.7" width="28" height="2.6" rx="1" fill="#B8B8BC" stroke="none"/>
+          <circle cx="28" cy="32" r="2.6" fill="#B84426" stroke="none"/>
+          <rect x="34" y="30.7" width="36" height="2.6" rx="1" fill="#B8B8BC" stroke="none"/>
+          <circle cx="28" cy="42" r="2.6" fill="#B84426" stroke="none"/>
+          <rect x="34" y="40.7" width="22" height="2.6" rx="1" fill="#B8B8BC" stroke="none"/>
+          <circle cx="28" cy="52" r="3.2" fill="#B84426" stroke="#B84426" stroke-width="1.2"/>
+          <rect x="34" y="50.7" width="40" height="2.6" rx="1" fill="#1D1D1F" stroke="none"/>
+          <text x="78" y="53.4" font-family="ui-monospace, monospace" font-size="3.6" fill="#B84426" font-weight="700" stroke="none" letter-spacing="0.3">HEAD</text>
+          <!-- keyboard base -->
+          <path d="M4 68 L116 68 L112 76 L8 76 Z" fill="#E5E5E8"/>
+          <line x1="50" y1="70" x2="70" y2="70" stroke="#1D1D1F" stroke-width="1" stroke-linecap="round"/>
+        </svg>
+        <h3>Your computer</h3>
+        <p class="ps-tag">where <strong>Git</strong> lives</p>
+        <ul class="ps-list">
+          <li>Keeps <strong>every version</strong>, forever</li>
+          <li>Works without internet</li>
+          <li>Only you can see it</li>
+        </ul>
+      </div>
+
+      <div class="ps-arrow">
+        <svg viewBox="0 0 56 44" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- top arrow: right (push) -->
+          <line x1="6" y1="12" x2="46" y2="12"/>
+          <polyline points="40,6 50,12 40,18"/>
+          <!-- bottom arrow: left (pull / clone) -->
+          <line x1="10" y1="32" x2="50" y2="32"/>
+          <polyline points="16,26 6,32 16,38"/>
+        </svg>
+        <span class="ps-arrow-label">git push ↑</span>
+        <span class="ps-arrow-label" style="margin-top:-0.2vh;">git pull · clone ↓</span>
+      </div>
+
+      <div class="ps-card accent">
+        <svg class="ps-icon gh" viewBox="0 0 98 96" fill="currentColor">
+          <path d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0Z"/>
+        </svg>
+        <h3>GitHub.com</h3>
+        <p class="ps-tag">where your code <strong>goes online</strong></p>
+        <ul class="ps-list">
+          <li>Shareable · public URL</li>
+          <li>Backed up automatically</li>
+          <li>Collaborate with anyone</li>
+        </ul>
+        <p class="ps-footnote">Alternatives exist, GitLab, Gitee, Bitbucket, corporate servers. We're using <strong>GitHub</strong> because it's the standard everyone meets eventually.</p>
+      </div>
+    </div>
+    <p class="caption center" style="text-align:center; margin-top: 2.2vh; font-size: 1.05vw;"><strong>Same code, two places.</strong> <code style="font-family: var(--font-mono); font-size: 0.92em; color: var(--accent);">push</code> syncs your computer → GitHub. <code style="font-family: var(--font-mono); font-size: 0.92em; color: var(--accent);">pull</code> / <code style="font-family: var(--font-mono); font-size: 0.92em; color: var(--accent);">clone</code> brings GitHub → your computer.</p>
+  </div>
+</section>
+
+<!-- 4 · Same project, two places + .gitignore decides (merged) -->
+<section class="slide" data-counter="4">
+  <div class="slide-inner">
+    <div class="kicker center">The .gitignore file</div>
+    <h2 class="statement center" style="font-size: 3.2vw; text-align:center; margin-bottom: 1vh;">Not every local file should <em>sync to the cloud</em>.</h2>
+    <div class="ignore-row">
+      <div class="ignore-col">
+        <div class="col-label">① Local · on my computer</div>
+        <div class="finder-win">
+          <div class="finder-chrome">
+            <span class="tl tl-red"></span>
+            <span class="tl tl-yellow"></span>
+            <span class="tl tl-green"></span>
+            <span class="finder-title">POLI3148_2026Spring_GitHubPagesDemo</span>
+          </div>
+          <div class="finder-body">
+            <div class="frow ignored">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              .DS_Store
+            </div>
+            <div class="frow ignored">
+              <svg class="fi folder" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2A1.75 1.75 0 0 0 5 1H1.75Z"/></svg>
+              .venv
+            </div>
+            <div class="frow ignored">
+              <svg class="fi folder" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2A1.75 1.75 0 0 0 5 1H1.75Z"/></svg>
+              __pycache__
+            </div>
+            <div class="frow">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              .gitignore
+            </div>
+            <div class="frow">
+              <svg class="fi folder" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2A1.75 1.75 0 0 0 5 1H1.75Z"/></svg>
+              data
+            </div>
+            <div class="frow indent ignored">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              .DS_Store
+            </div>
+            <div class="frow indent ignored">
+              <svg class="fi folder" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2A1.75 1.75 0 0 0 5 1H1.75Z"/></svg>
+              raw
+            </div>
+            <div class="frow indent">
+              <svg class="fi folder" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2A1.75 1.75 0 0 0 5 1H1.75Z"/></svg>
+              processed
+            </div>
+            <div class="frow indent2">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              vdem_europe.csv
+            </div>
+            <div class="frow">
+              <svg class="fi folder" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2A1.75 1.75 0 0 0 5 1H1.75Z"/></svg>
+              docs
+            </div>
+            <div class="frow indent">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              index.html
+            </div>
+            <div class="frow">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              dashboard.py
+            </div>
+            <div class="frow">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              README.md
+            </div>
+            <div class="frow">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              requirements.txt
+            </div>
+          </div>
+        </div>
+        <div class="col-sub">red rows = files that stay local</div>
+      </div>
+      <div class="ignore-col">
+        <div class="col-label accent">② The rule</div>
+        <div class="gitignore-file">
+          <div class="filename">.gitignore</div>
+          <div class="rule">__pycache__/</div>
+          <div class="rule">*.pyc</div>
+          <div class="rule">.venv/</div>
+          <div class="rule">.ipynb_checkpoints/</div>
+          <div class="rule">.DS_Store</div>
+          <div class="rule">data/raw/</div>
+        </div>
+        <div class="col-sub">plain text · one rule per line</div>
+      </div>
+      <div class="ignore-col">
+        <div class="col-label">③ Cloud · on GitHub</div>
+        <div class="gh-win">
+          <div class="gh-chrome">
+            <svg class="gh-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+            <span>Kedirdan</span><span class="gh-slash">/</span><span class="gh-repo">POLI3148_2026Spring_GitHubPagesDemo</span>
+          </div>
+          <div class="gh-body">
+            <div class="gh-row">
+              <svg class="fi folder" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2A1.75 1.75 0 0 0 5 1H1.75Z"/></svg>
+              <span class="gh-name">data</span>
+              <span class="gh-time">2h ago</span>
+            </div>
+            <div class="gh-row">
+              <svg class="fi folder" viewBox="0 0 16 16" fill="currentColor"><path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2A1.75 1.75 0 0 0 5 1H1.75Z"/></svg>
+              <span class="gh-name">docs</span>
+              <span class="gh-time">2h ago</span>
+            </div>
+            <div class="gh-row">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              <span class="gh-name">.gitignore</span>
+              <span class="gh-time">2h ago</span>
+            </div>
+            <div class="gh-row">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              <span class="gh-name">README.md</span>
+              <span class="gh-time">2h ago</span>
+            </div>
+            <div class="gh-row">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              <span class="gh-name">dashboard.py</span>
+              <span class="gh-time">2h ago</span>
+            </div>
+            <div class="gh-row">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              <span class="gh-name">data_prep.py</span>
+              <span class="gh-time">2h ago</span>
+            </div>
+            <div class="gh-row">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              <span class="gh-name">explore.py</span>
+              <span class="gh-time">2h ago</span>
+            </div>
+            <div class="gh-row">
+              <svg class="fi file" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 12.25 16h-8.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25V6H9.75A1.75 1.75 0 0 1 8 4.25V1.5Zm5.75.062V4.25c0 .138.112.25.25.25h2.688l-2.938-2.938Z"/></svg>
+              <span class="gh-name">requirements.txt</span>
+              <span class="gh-time">2h ago</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-sub">only the files you chose to upload</div>
+      </div>
+    </div>
+    <p class="caption center" style="text-align:center; margin-top:2.5vh;">Large files, secrets, build artifacts: these stay on your computer. A single plain-text file decides.</p>
+  </div>
+</section>
+
+<!-- 5 · Part Three · Webpages on GitHub (merged: concept + two modes) -->
+<section class="slide" data-counter="5">
+  <div class="slide-inner">
+    <div class="kicker center">GitHub Pages</div>
+    <h2 class="statement center" style="font-size: 3.2vw; text-align:center; margin-bottom: 1vh;">GitHub Pages serves your HTML<br>as a <em>public webpage</em>.</h2>
+    <div class="url-flow">
+      <a href="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPagesDemo" target="_blank" rel="noopener" class="url-pill">
+        github.<strong>com</strong>/Kedirdan/POLI3148_2026Spring_GitHubPagesDemo
+        <svg class="ext-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.75.75 0 0 1-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"/></svg>
+      </a>
+      <span class="url-arrow">→</span>
+      <a href="https://Kedirdan.github.io/POLI3148_2026Spring_GitHubPagesDemo" target="_blank" rel="noopener" class="url-pill accent">
+        Kedirdan.github.<strong>io</strong>/POLI3148_2026Spring_GitHubPagesDemo
+        <svg class="ext-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.75.75 0 0 1-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"/></svg>
+      </a>
+    </div>
+    <div class="url-previews">
+      <div class="url-preview">
+        <img src="assets/05a-source-view.png" alt="GitHub.com source view, HTML code of docs/index.html">
+      </div>
+      <div class="url-preview live">
+        <img src="assets/05b-live-view.png" alt="GitHub.io live view, the rendered dashboard">
+      </div>
+    </div>
+    <p class="caption center" style="text-align:center; margin-top: 3vh; font-size: 1.05vw;">We publish from <strong class="accent">/docs/</strong>. <strong>Your code can stay private, your webpage stays public.</strong> Requires GitHub Pro, <span class="accent">free for you now</span>.</p>
+  </div>
+</section>
+
+<!-- 6a · Workflow · step 1 · Cloud before -->
+<!-- 6 · Workflow · two messages → live update (merged from 6a + 6b + 6c) -->
+<section class="slide" data-counter="6">
+  <div class="slide-inner">
+    <div class="kicker center">The edit loop</div>
+    <h2 class="statement center" style="font-size: 2.6vw; text-align:center; margin-bottom: 1vh;">Updating a published page takes <em>two messages</em> to Copilot.</h2>
+    <div class="split-mock-layout">
+      <!-- LEFT: Copilot Chat · iMessage-style bubbles -->
+      <div class="chat-mock" style="width:100%;">
+        <div class="cm-header">
+          <div class="cm-title">Copilot Chat</div>
+        </div>
+        <div class="cm-body">
+          <div class="cm-bubble user">Change the subtitle of my webpage to <em>"Five Acts of European Democracy · 1900–2024"</em>, then commit and push.</div>
+          <div class="cm-bubble ai">Done. Found the subtitle in <code>dashboard.py</code>, updated it, committed as <em>"Rephrase subtitle"</em>, pushed to <code>main</code>.</div>
+          <div class="cm-status">
+            <svg class="ico-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 8 7 12 13 4"/></svg>
+            Pushed. Refresh.
+          </div>
+        </div>
+        <div class="cm-footer">GPT-5.3-Codex · 1x</div>
+      </div>
+
+      <div class="sm-arrow">
+        <svg viewBox="0 0 50 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="10" x2="42" y2="10"/>
+          <polyline points="36,4 46,10 36,16"/>
+        </svg>
+        <span class="sm-arrow-lbl">page updates</span>
+      </div>
+
+      <!-- RIGHT: Live page mock mirroring the real demo's docs/index.html hero -->
+      <div class="win-mock accent" style="width:100%; height: auto;">
+        <div class="wm-chrome">
+          <div class="wm-dots">
+            <span class="tl tl-red"></span>
+            <span class="tl tl-yellow"></span>
+            <span class="tl tl-green"></span>
+          </div>
+          <span class="wm-url-bar">Kedirdan.github.io/POLI3148_2026Spring_GitHubPagesDemo</span>
+        </div>
+        <div class="live-mock">
+          <div class="live-disclaimer">
+            <strong>AI-generated content</strong>, do not cite · purely a GitHub Pages demo.
+          </div>
+          <div class="live-nav">
+            <div class="live-nav-brand">The Long Century of European Democracy <span class="tag">AI Demo</span></div>
+            <div class="live-nav-links"><a>§1 Rise &amp; Fall</a><a>§2 Divided</a><a>§3 Third Wave</a><a>§4 Backsliding</a><a>§5 Typology</a></div>
+          </div>
+          <div class="live-hero">
+            <div class="live-eyebrow">POLI 3148 · In-Class Demo · Apr 23, 2026</div>
+            <h1 class="live-h1">The Long Century of<br>European Democracy</h1>
+            <div class="live-subtitle-diff">
+              <p class="live-subtitle old">Democracy in Europe, 1900–2024</p>
+              <div class="diff-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="4" x2="12" y2="20"/>
+                  <polyline points="6 14 12 20 18 14"/>
+                </svg>
+                <span>one message · page rebuilt</span>
+              </div>
+              <p class="live-subtitle new">Five Acts of European Democracy · 1900–2024</p>
+            </div>
+            <div class="live-meta">
+              <span><strong>Data:</strong> V-Dem v16 (Mar 2026)</span>
+              <span><strong>Scope:</strong> 42 states × 125 years</span>
+              <span><strong>Obs:</strong> 4,110 country-years</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption center" style="text-align:center; margin-top: 1.4vh; font-size: 0.92vw;">Same URL, new subtitle. No server configuration, no Git commands typed; the change is described to Copilot in natural language.</p>
+  </div>
+</section>
+
+<!-- 7a · Configure Copilot Chat · model + Autopilot -->
+<section class="slide" data-counter="7a">
+  <div class="slide-inner">
+    <div class="kicker center">Copilot Chat setup, one-time</div>
+    <h2 class="statement center" style="font-size: 2.6vw; text-align:center; margin-bottom: 1vh;">Pick a <em>model</em>. Give it permission to run <em>terminal commands</em>.</h2>
+    <div class="prep-layout">
+      <div class="prep-card">
+        <div class="prep-head">
+          
+          <span class="prep-title">Pick a model</span>
+          <span class="prep-hint">click the chip · choose Codex</span>
+        </div>
+        <div class="prep-body">
+          <p>Click the model chip in the Copilot Chat input row. You'll see this dropdown, pick <strong>GPT-5.3-Codex</strong>:</p>
+          <div class="picker-mock">
+            <div class="pm-search">Select a model for chat</div>
+            <div class="pm-row active">
+              <span class="pm-mark star"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><polygon points="8 1 10.2 5.8 15.5 6.3 11.5 9.9 12.8 15 8 12.4 3.2 15 4.5 9.9 0.5 6.3 5.8 5.8"/></svg></span>
+              <span class="pm-name">GPT-5.3-Codex</span>
+              <span class="pm-via">GitHub · strongest</span>
+            </div>
+            <div class="pm-row">
+              <span class="pm-mark">·</span>
+              <span class="pm-name">Gemini 3.1 Pro</span>
+              <span class="pm-via">GitHub</span>
+            </div>
+            <div class="pm-row">
+              <span class="pm-mark">·</span>
+              <span class="pm-name">GLM 5.1</span>
+              <span class="pm-via">OpenRouter</span>
+            </div>
+            <div class="pm-row">
+              <span class="pm-mark">·</span>
+              <span class="pm-name">Qwen 3.6 Plus</span>
+              <span class="pm-via">OpenRouter</span>
+            </div>
+          </div>
+          <p style="color:var(--mute);font-style:italic;font-size:0.74vw;margin-top:0.6vh;">If Codex hits a rate limit, any of the other three works. All four are "agentic", they plan, run commands, and recover from errors.</p>
+        </div>
+        <div style="padding: 0.9vh 1.2vw 1vh; background: #FAFAFC; border-top: 1px solid var(--line); display: flex; gap: 0.5vw; align-items: center;">
+          <span class="vsc-chip" style="background:#1f1f1f;color:#e0e0e0;padding:0.4vh 0.7vw;border-radius:5px;font-family:var(--font-mono);font-size:0.64vw;border:1px solid #3a3a3a;">Agent ∨ &nbsp;·&nbsp; GPT-5.3-Codex ∨</span>
+          <span style="font-family:var(--font-body);font-size:0.7vw;color:var(--mute);">← the chip above the input</span>
+        </div>
+      </div>
+
+      <div class="prep-card">
+        <div class="prep-head">
+          
+          <span class="prep-title">Turn on Autopilot</span>
+          <span class="prep-hint">no "Allow" clicks</span>
+        </div>
+        <div class="prep-body">
+          <p>Bottom-right of the Copilot Chat panel, a chip says <code>Default Approvals</code>. Click it. You'll see this dropdown, switch to <strong>Autopilot (Preview)</strong>:</p>
+          <div class="picker-mock">
+            <div class="pm-row">
+              <span class="pm-mark"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="3"/></svg></span>
+              <span class="pm-name">Default Approvals</span>
+              <span class="pm-via">the default · skip this</span>
+            </div>
+            <div class="pm-row active">
+              <span class="pm-mark">•</span>
+              <span class="pm-name">Autopilot (Preview)</span>
+              <span class="pm-via">pick this</span>
+            </div>
+            <div class="pm-row">
+              <span class="pm-mark">·</span>
+              <span class="pm-name">Bypass Approvals</span>
+              <span class="pm-via">also fine</span>
+            </div>
+          </div>
+          <p style="color:var(--mute);font-style:italic;font-size:0.74vw;margin-top:0.6vh;">Otherwise every terminal command pauses for your <code>Allow</code> click.</p>
+        </div>
+        <div style="padding: 1vh 1.2vw 1.2vh; background: #FAFAFC; border-top: 1px solid var(--line); display: flex; gap: 0.6vw; align-items: center;">
+          <span class="vsc-chip" style="background:#1a1a1a;color:#FFC93D;padding:0.4vh 0.7vw;border-radius:5px;font-family:var(--font-mono);font-size:0.68vw;">Autopilot (Preview) ∨</span>
+          <span style="font-family:var(--font-body);font-size:0.72vw;color:var(--mute);">← the bottom-right chip</span>
+        </div>
+      </div>
+    </div>
+    <p class="caption center" style="text-align:center; margin-top: 2vh; font-size: 0.92vw;">Do these two once. Every future prompt runs end-to-end without stopping to ask you.</p>
+  </div>
+</section>
+
+<!-- 7b · Prompt 1 · Paste + Copilot posts the code -->
+<section class="slide" data-counter="7b">
+  <div class="slide-inner">
+    <div class="kicker center">Prompt 1, install GitHub CLI</div>
+    <h2 class="statement center" style="font-size: 2.6vw; text-align:center; margin-bottom: 1vh;">Prompt 1 installs <code>gh</code> and <em>authenticates you</em> on GitHub.</h2>
+    <div class="prompt-card" style="max-width: 54vw; margin: 1.4vh auto 0;">
+      <div class="pc-head" style="padding: 1.1vh 1.4vw 0.9vh;">
+        <span class="pc-tag">Prompt 1 · Setup</span>
+        <span class="pc-desc" style="font-size:0.82vw;">Install <span class="code">gh</span> · log in to GitHub · <em>one Authorize click</em></span>
+      </div>
+      <div class="pc-btns" style="padding: 1vh 1.4vw;">
+        <a href="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPages/blob/main/prompts/prompt-1-setup.txt" target="_blank" rel="noopener" class="pc-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Z"/><path d="M10.604 1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.75.75 0 0 1-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"/></svg>
+          <span class="btn-label">Open on GitHub ↗</span>
+        </a>
+        <button class="pc-btn primary" type="button" data-action="copy" data-target="p1-full">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="9" height="10" rx="1.5"/><path d="M4 10V3.5A1.5 1.5 0 0 1 5.5 2H11"/></svg>
+          <span class="btn-label">Copy</span>
+        </button>
+      </div>
+    </div>
+    <div class="hero-mock" style="max-width: 54vw; margin-top: 1.4vh;">
+      <div class="chat-mock" style="width:100%;">
+        <div class="cm-header">
+          <div class="cm-title">Copilot Chat</div>
+        </div>
+        <div class="cm-body">
+          <div class="cm-bubble user">Prepare my computer to use GitHub from the terminal… <span class="tail">(paste the whole prompt)</span></div>
+          <div class="cm-bubble ai">Installed <code>gh</code>, started the web login flow. Here is your one-time code.</div>
+          <div class="cm-status code-pill">
+            <b>568F-2512</b>, paste in the browser, click Authorize, then return.
+          </div>
+        </div>
+        <div class="cm-footer">GPT-5.3-Codex · 1x</div>
+      </div>
+    </div>
+    <pre id="p1-full" style="display:none">Prepare my machine so I can use GitHub from the terminal. Run every step below in my integrated terminal. Narrate one sentence before each command, show the tail of its output, and handle errors yourself. Stop only if truly blocked.
+
+━━━ GLOBAL RULES ━━━
+• Do NOT use `exit`, `||`, or nested subshells inside polling loops, those can close the wrapper shell. Use plain for-loops with `break`.
+• When a command prompts for the macOS admin password, POST this message clearly in the chat:
+    WARNING: macOS is asking for your admin password in the terminal below.
+       Click into the terminal, type your login password, press Enter.
+       Characters WILL NOT appear as you type, that is a security feature, not a bug.
+• When gh prints a one-time device code, POST it prominently in chat (not buried), with 4-step browser instructions and a 15-minute expiry warning.
+• If any install step fails, DO NOT silently continue. Stop, clearly explain the failure, and point me to the manual download URL (https://github.com/cli/cli/releases/latest).
+
+━━━ PHASE A · Install gh ━━━
+1. Run `gh --version`. If it succeeds, skip to PHASE B.
+2. Detect my OS (run `uname -s` on Unix or check `$env:OS` / `ver` on Windows).
+3. macOS:
+   a) Run `which brew`. If Homebrew is present, run `brew install gh`, then go to step 6.
+   b) Otherwise do NOT install Homebrew (too invasive). Try the signed .pkg install:
+        ARCH=$(uname -m); [ "$ARCH" = "arm64" ] &amp;&amp; A=arm64 || A=amd64
+        TAG=$(curl -sSI https://github.com/cli/cli/releases/latest | awk -F'/tag/' '/^location:/ {print $2}' | tr -d '
+')
+        If TAG is empty OR the curl command fails: STOP and print the manual-install message (see below).
+        Otherwise:
+          VER=${TAG#v}
+          curl -fL -o /tmp/gh.pkg "https://github.com/cli/cli/releases/download/${TAG}/gh_${VER}_macOS_${A}.pkg"
+          → post the sudo-password coach message, then run: sudo installer -pkg /tmp/gh.pkg -target /
+        If any command above fails (non-zero exit), STOP and print the manual-install message.
+   c) Manual-install message for macOS:
+        The automatic installer failed. Please install gh manually:
+          1. Open https://github.com/cli/cli/releases/latest in your browser.
+          2. Under "Assets", download the file ending in `_macOS_arm64.pkg` (Apple Silicon) or `_macOS_amd64.pkg` (Intel).
+          3. Double-click the downloaded .pkg file and follow the installer.
+          4. Re-paste Prompt 1 into Copilot Chat to continue.
+4. Windows (PowerShell):
+   a) Try `winget install --id GitHub.cli -e --silent --accept-package-agreements --accept-source-agreements`.
+   b) If winget is unavailable OR the command fails, STOP and print the manual-install message:
+        The automatic installer failed. Please install gh manually:
+          1. Open https://github.com/cli/cli/releases/latest in your browser.
+          2. Under "Assets", download the file ending in `_windows_amd64.msi`.
+          3. Double-click the .msi file and follow the installer.
+          4. Re-paste Prompt 1 into Copilot Chat to continue.
+5. Linux:
+   a) Follow https://github.com/cli/cli/blob/trunk/docs/install_linux.md for your distribution.
+   b) If unclear, STOP and ask me to install manually, then re-paste Prompt 1.
+6. Confirm with `gh --version`. If it still fails, STOP.
+
+━━━ PHASE B · Authenticate ━━━
+7. Run `gh auth status`. If already logged in, skip to step 10.
+8. Run: `gh auth login --hostname github.com --git-protocol https --web --scopes repo,workflow,delete_repo`
+9. Extract the 8-digit device code from output. Post this boxed message in chat:
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       YOUR ONE-TIME CODE: XXXX-XXXX
+       Valid for 15 minutes, do this now.
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       1. A github.com/login/device tab should have auto-opened.
+          If not, open it manually now.
+       2. Paste the code into the 8 boxes, click "Continue".
+       3. Review the scopes, click the green "Authorize".
+       4. "Congratulations, you're all set!" → come back to VS Code.
+   Poll with a safe for-loop (no exit, no ||):
+       for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+         gh auth status &amp;&amp; break; sleep 5;
+       done
+   If the loop ends without login (code expired), re-run `gh auth login …`, post the new code, and poll again.
+10. Run `gh api user --jq .login` to confirm. As your final message, print on its own line:
+    Environment ready. Logged in as &lt;username&gt;. You're set to deploy.</pre>
+  </div>
+</section>
+
+<!-- 7c · Browser: paste 8 chars → Authorize → logged in (merged from 7c + 7d) -->
+<section class="slide" data-counter="7c">
+  <div class="slide-inner">
+    <div class="kicker center">Browser authorization</div>
+    <h2 class="statement center" style="font-size: 2.6vw; text-align:center; margin-bottom: 1vh;">Complete the <em>device-login flow</em> in your browser.</h2>
+    <div class="split-mock-layout">
+      <div class="win-mock">
+        <div class="wm-chrome">
+          <div class="wm-dots">
+            <span class="tl tl-red"></span>
+            <span class="tl tl-yellow"></span>
+            <span class="tl tl-green"></span>
+          </div>
+          <span class="wm-url-bar">github.com/login/device</span>
+        </div>
+        <div class="browser-page">
+          <svg class="gh-brand" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+          <h3>Authorize your device</h3>
+          <p>Enter the code displayed on the device you're signing in to.</p>
+          <div class="code-entry">
+            <div class="cb">5</div>
+            <div class="cb">6</div>
+            <div class="cb">8</div>
+            <div class="cb">F</div>
+            <span class="cb-sep">-</span>
+            <div class="cb">2</div>
+            <div class="cb">5</div>
+            <div class="cb">1</div>
+            <div class="cb">2</div>
+          </div>
+          <button class="gh-continue" type="button">Continue</button>
+        </div>
+      </div>
+
+      <div class="sm-arrow">
+        <svg viewBox="0 0 50 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="10" x2="42" y2="10"/>
+          <polyline points="36,4 46,10 36,16"/>
+        </svg>
+        <span class="sm-arrow-lbl">click Authorize</span>
+      </div>
+
+      <div class="win-mock">
+        <div class="wm-chrome">
+          <div class="wm-dots">
+            <span class="tl tl-red"></span>
+            <span class="tl tl-yellow"></span>
+            <span class="tl tl-green"></span>
+          </div>
+          <span class="wm-url-bar">github.com/login/oauth/authorize</span>
+        </div>
+        <div class="browser-page">
+          <div class="gh-check"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="16" r="13"/><polyline points="10 16 14 20 22 12"/></svg></div>
+          <h3>Congratulations, you're all set!</h3>
+          <p>Your device is now authorized to access GitHub on behalf of <strong>Kedirdan</strong>. You can close this window and return to VS Code.</p>
+        </div>
+      </div>
+    </div>
+    <p class="caption center" style="text-align:center; margin-top: 2vh; font-size: 0.95vw;">Back in VS Code, Copilot finishes with <span class="code" style="font-size:0.9em;">Environment ready. Logged in as &lt;username&gt;.</span></p>
+  </div>
+</section>
+
+<!-- 8 · Open in VS Code + Paste Prompt 2 + Live (merged from 8a + 8b) -->
+<section class="slide" data-counter="8">
+  <div class="slide-inner">
+    <div class="kicker center">Prompt 2, deploy the workspace</div>
+    <h2 class="statement center" style="font-size: 2.6vw; text-align:center; margin-bottom: 1vh;">Prompt 2 publishes the current workspace to <em>GitHub Pages</em>.</h2>
+    <div class="prompt-card" style="max-width: 54vw; margin: 1.4vh auto 0;">
+      <div class="pc-head" style="padding: 1.1vh 1.4vw 0.9vh;">
+        <span class="pc-tag">Prompt 2 · Deploy</span>
+        <span class="pc-desc" style="font-size:0.82vw;">Publish the workspace to GitHub Pages · <em>no edits · Copilot does the rest</em></span>
+      </div>
+      <div class="pc-btns" style="padding: 1vh 1.4vw;">
+        <a href="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPages/blob/main/prompts/prompt-2-deploy.txt" target="_blank" rel="noopener" class="pc-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Z"/><path d="M10.604 1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.75.75 0 0 1-1.06-1.06l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"/></svg>
+          <span class="btn-label">Open on GitHub ↗</span>
+        </a>
+        <button class="pc-btn primary" type="button" data-action="copy" data-target="p2-full">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="9" height="10" rx="1.5"/><path d="M4 10V3.5A1.5 1.5 0 0 1 5.5 2H11"/></svg>
+          <span class="btn-label">Copy</span>
+        </button>
+      </div>
+    </div>
+    <div class="hero-mock" style="max-width: 54vw; margin-top: 1.4vh;">
+      <div class="chat-mock" style="width:100%;">
+        <div class="cm-header">
+          <div class="cm-title">Copilot Chat</div>
+        </div>
+        <div class="cm-body">
+          <div class="cm-bubble user">Please publish this VS Code workspace to GitHub Pages… <span class="tail">(paste the whole prompt)</span></div>
+          <div class="cm-bubble ai">Done. Created <code>Kedirdan/POLI3148_2026Spring_GitHubPagesDemo</code>, pushed the files, enabled Pages from <code>/docs</code>, waited for the build. Wrote <code>GITHUB_PAGES.md</code> with a log of what I did.</div>
+          <div class="cm-status">
+            <svg class="ico-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 8 7 12 13 4"/></svg>
+            Live at <b>https://Kedirdan.github.io/POLI3148_2026Spring_GitHubPagesDemo/</b>
+          </div>
+        </div>
+        <div class="cm-footer">GPT-5.3-Codex · 1x</div>
+      </div>
+    </div>
+
+    <div class="clone-aside" style="margin-top: 1vh;">
+      <span class="ca-dot">○</span>
+      <span class="ca-text">No project ready? Paste the <strong>Clone prompt</strong> first, Copilot clones my demo to your Desktop, then run Prompt 2 on it.</span>
+      <div class="ca-btns">
+        <a href="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPages/blob/main/prompts/prompt-clone.txt" target="_blank" rel="noopener" class="ca-btn">
+          <span class="btn-label">Open ↗</span>
+        </a>
+        <button class="ca-btn primary" type="button" data-action="copy" data-target="pclone-full">
+          <span class="btn-label">Copy Clone prompt</span>
+        </button>
+      </div>
+    </div>
+
+    <pre id="pclone-full" style="display:none">Please clone my instructor's demo project to my Desktop so I can practice the deploy flow on it. Narrate one sentence before each command, show the tail of output, handle errors.
+
+━━━ SETUP ━━━
+SOURCE="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPagesDemo"
+TARGET="~/Desktop/POLI3148_2026Spring_GitHubPagesDemo"
+
+━━━ STEPS ━━━
+1. `cd ~/Desktop` and check whether `POLI3148_2026Spring_GitHubPagesDemo` already exists. If so, stop and tell me it's already cloned.
+2. `git clone "$SOURCE" "$TARGET"`. Show the tail of the clone output.
+3. `cd "$TARGET"` and `git remote remove origin` so the clone is detached from my instructor's repo (ignore error if no origin).
+4. Final message, on its own line:
+   Demo ready at ~/Desktop/POLI3148_2026Spring_GitHubPagesDemo. Open that folder in VS Code (File → Open Folder), then paste Prompt 2.</pre>
+    <pre id="p2-full" style="display:none">Please publish this VS Code workspace to GitHub Pages. Use the folder I currently have open, don't ask me for a path. Narrate one sentence before each command, show the tail of output, handle errors yourself.
+
+━━━ GUIDING PRINCIPLES ━━━
+• Minimal disruption: only touch files that must be changed to make GitHub Pages work. Leave my existing project structure alone.
+• Scientific copy: never move or delete non-web files (`.py`, `.ipynb`, `.md`, `.txt`, `.json`, `.csv`, `data/`, `src/`, etc). If the webpage has to be relocated into `docs/`, COPY (do not move) the web files.
+• Honest errors: if the build does not finish, do not pretend it succeeded. Report the real state.
+• Document what you did: create a new file `GITHUB_PAGES.md` at the root, summarising the exact changes. Never touch the student's existing `README.md` or any other file in the project.
+
+━━━ PHASE A · Check prerequisites ━━━
+1. `gh --version` and `gh auth status`. If either fails, stop and tell me to run Prompt 1 first.
+2. `pwd` to confirm the workspace root.
+3. If `.git` already exists AND a remote named `origin` is configured AND there are existing commits, stop and ask me how to proceed. Do NOT overwrite an existing repository.
+
+━━━ PHASE B · Locate the webpage ━━━
+4. Decide which structure to use:
+   a) If `docs/index.html` already exists, reuse it. No file moves needed.
+   b) Else if `index.html` exists at the root (but no `docs/index.html`), create `docs/` and **copy** (use `cp`, not `mv`) only these items into it:
+        - Every `.html` file at the root.
+        - Every `.css`, `.js` file at the root.
+        - These subdirectories if they exist: `assets/`, `images/`, `img/`, `css/`, `js/`, `fonts/`, `media/`.
+        - Do NOT copy: `.py`, `.ipynb`, `.md`, `.txt`, `.json`, `.yml`, `.yaml`, `.csv`, `data/`, `src/`, `scripts/`, `notebooks/`, or any hidden folder.
+      After copying, confirm `docs/index.html` exists.
+   c) Else, stop and tell me: "No `index.html` found at root or in `docs/`. This project has no webpage to publish."
+
+━━━ PHASE C · Configure .gitignore ━━━
+5. Build the list of rules every student project should ignore:
+       # macOS / editor
+       .DS_Store
+       Thumbs.db
+       .vscode/
+       .idea/
+
+       # Python
+       __pycache__/
+       *.pyc
+       .venv/
+       venv/
+       .ipynb_checkpoints/
+
+       # Node
+       node_modules/
+       npm-debug.log*
+
+       # Secrets, never commit these
+       .env
+       .env.local
+       *.key
+       *.pem
+
+       # Large data, opt-in
+       data/raw/
+       *.csv.gz
+   If `.gitignore` does not exist, create it with the full list above.
+   If `.gitignore` already exists, APPEND any rules from the list that are missing. Never remove or rewrite rules the student already has.
+
+━━━ PHASE D · Init git + first commit ━━━
+6. If `.git` does not exist: `git init -b main`.
+7. OWNER=$(gh api user --jq .login)
+8. If `git config user.email` is empty:
+        git config user.name "$OWNER"
+        git config user.email "${OWNER}@users.noreply.github.com"
+
+━━━ PHASE E · Create GitHub repo + push ━━━
+9. REPO=$(basename "$PWD")
+10. `gh repo create "$REPO" --public --source=. --remote=origin --push` (this stages + commits + pushes in one go via the flag).
+    If step 10 fails because `.git` exists but there's nothing to commit yet, first run `git add . &amp;&amp; git commit -m "Initial deploy to GitHub Pages"` and retry.
+11. If "name already exists": REPO="${REPO}-$(date +%m%d)"; retry step 10.
+
+━━━ PHASE F · Enable Pages from /docs ━━━
+12. `gh api --method POST repos/$OWNER/$REPO/pages -f source[branch]=main -f source[path]=/docs`
+
+━━━ PHASE G · Poll build (≤200s) ━━━
+13. Poll 25 times, 8 seconds apart:
+        for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25; do
+          S=$(gh api repos/$OWNER/$REPO/pages --jq .status 2&gt;/dev/null)
+          echo "[$i] $S"
+          [ "$S" = "built" ] &amp;&amp; break
+          sleep 8
+        done
+
+━━━ PHASE H · Write GITHUB_PAGES.md ━━━
+14. Create a new file `GITHUB_PAGES.md` at the workspace root. Never touch the student's existing `README.md` or any other file. Fill in actual values for &lt;OWNER&gt;, &lt;REPO&gt;, today's ISO date, and the list of actions you actually took:
+
+    # GitHub Pages deployment
+
+    Generated by Prompt 2 on &lt;ISO date&gt;.
+
+    ## Where the page lives
+
+    - Repository: https://github.com/&lt;OWNER&gt;/&lt;REPO&gt;
+    - Live webpage: https://&lt;OWNER&gt;.github.io/&lt;REPO&gt;/
+    - Pages source: `main` branch, `/docs` folder.
+    - Build status at end of Prompt 2: &lt;built | still running&gt;
+
+    ## What Prompt 2 changed in this workspace
+
+    &lt;One bullet per actual action, for example:
+     - "Created `docs/` and copied `index.html`, `style.css` into it."
+     - "Created `.gitignore` with default rules for macOS, Python, Node, secrets, large data."
+     - "Appended `.DS_Store` and `__pycache__/` to existing `.gitignore`."&gt;
+
+    ## What Prompt 2 did NOT change
+
+    - Your `README.md` and every existing file in the project were not modified.
+    - Your `.py`, `.ipynb`, `.txt`, `.csv`, and `data/` files are untouched.
+    - Files were copied into `docs/`, not moved. Your root webpage still exists if it was there before.
+
+    ## How to update the page later
+
+    Edit any file, then ask Copilot: *"Commit and push."* The live page rebuilds on its own.
+
+    ## How to undo
+
+    - Disable Pages in the repo settings, or delete the `/docs/` folder and push.
+    - Delete the repository: `gh repo delete &lt;OWNER&gt;/&lt;REPO&gt;`.
+
+    ## Questions
+
+    Ask Copilot (me) about any step above. I can explain why each command was run, or help adjust the setup for your specific project.
+15. Commit: `git add GITHUB_PAGES.md &amp;&amp; git commit -m "docs: add GitHub Pages deployment log" &amp;&amp; git push`.
+
+━━━ PHASE I · Report ━━━
+16. Check final build status from step 13.
+    - If `$S = built`, print on its own line:
+          Live at https://$OWNER.github.io/$REPO/
+          See GITHUB_PAGES.md for a full log of what was done. Ask me if anything is unclear.
+    - Otherwise, print:
+          The build is still running. Visit https://$OWNER.github.io/$REPO/ in one minute and refresh.
+          See GITHUB_PAGES.md for a full log of what was done.</pre>
+  </div>
+</section>
+
+<!-- 9 · Start · handover -->
+<section class="slide" data-counter="9">
+  <div class="slide-inner center">
+    <h1 class="hero">Your <em>turn</em></h1>
+    <p class="sub">Start your deployment. Ask questions at any time.</p>
+    <div class="learn-more">
+      <div class="lm-title">Learn more</div>
+      <div class="lm-grid">
+        <a href="https://docs.github.com/en/pages" target="_blank" rel="noopener" class="lm-card">
+          <div class="lm-card-label">Official docs</div>
+          <div class="lm-card-title">GitHub Pages documentation</div>
+          <div class="lm-card-sub">docs.github.com/en/pages</div>
+        </a>
+        <a href="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPages/blob/main/learn-more/prompt-1-explained.md" target="_blank" rel="noopener" class="lm-card">
+          <div class="lm-card-label">Prompt 1, explained</div>
+          <div class="lm-card-title">Install gh + authenticate</div>
+          <div class="lm-card-sub">Why each step exists, what to do when it fails</div>
+        </a>
+        <a href="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPages/blob/main/learn-more/prompt-2-explained.md" target="_blank" rel="noopener" class="lm-card">
+          <div class="lm-card-label">Prompt 2, explained</div>
+          <div class="lm-card-title">Deploy the workspace</div>
+          <div class="lm-card-sub">Minimal-disruption principle, scientific copy, gitignore rules</div>
+        </a>
+        <a href="https://github.com/Kedirdan/POLI3148_2026Spring_GitHubPages/blob/main/learn-more/prompt-clone-explained.md" target="_blank" rel="noopener" class="lm-card">
+          <div class="lm-card-label">Clone prompt, explained</div>
+          <div class="lm-card-title">The backup path</div>
+          <div class="lm-card-sub">Why it detaches origin, when to use it</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+</div><!-- /.deck-frame -->
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const progress = document.getElementById('progress');
+const counter = document.getElementById('counter');
+const chapterStrip = document.getElementById('chapterStrip');
+const hint = document.querySelector('.hint');
+let idx = 0;
+
+// Chapter map · 9 chapters, some span multiple slides
+const chapters = [
+  { num: 1, label: 'Cover',    slides: [0],             subs: []            },
+  { num: 2, label: 'Git',      slides: [1],             subs: []            },
+  { num: 3, label: 'GitHub',   slides: [2],             subs: []            },
+  { num: 4, label: 'Ignore',   slides: [3],             subs: []            },
+  { num: 5, label: 'Pages',    slides: [4],             subs: []            },
+  { num: 6, label: 'Workflow', slides: [5],             subs: []            },
+  { num: 7, label: 'Setup',    slides: [6, 7, 8],       subs: ['a','b','c'] },
+  { num: 8, label: 'Deploy',   slides: [9],             subs: []            },
+  { num: 9, label: 'Start',    slides: [10],            subs: []            }
+];
+
+// Build the chapter strip once
+function buildChapterStrip() {
+  chapterStrip.innerHTML = chapters.map((ch, ci) => {
+    const dots = ch.subs.length
+      ? `<span class="ch-dots">${ch.subs.map(() => '<span class="ch-dot"></span>').join('')}</span>`
+      : '';
+    const sep = ci < chapters.length - 1 ? '<span class="ch-sep"></span>' : '';
+    return `<span class="ch-item" data-chapter="${ci}">
+      <span class="ch-num">${ch.num}</span>
+      <span class="ch-label">${ch.label}</span>
+      ${dots}
+    </span>${sep}`;
+  }).join('');
+
+  chapterStrip.querySelectorAll('.ch-item').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const ci = +el.dataset.chapter;
+      go(chapters[ci].slides[0]);
+    });
+  });
+}
+buildChapterStrip();
+
+function updateChapterStrip() {
+  chapters.forEach((ch, ci) => {
+    const item = chapterStrip.querySelector(`.ch-item[data-chapter="${ci}"]`);
+    const isActive = ch.slides.includes(idx);
+    item.classList.toggle('active', isActive);
+    if (ch.subs.length) {
+      const dots = item.querySelectorAll('.ch-dot');
+      dots.forEach((dot, di) => {
+        dot.classList.toggle('active', isActive && ch.slides[di] === idx);
+      });
+    }
+  });
+}
+
+const TOTAL_SECTIONS = 9;
+function render() {
+  slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+  progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+  const label = slides[idx].dataset.counter || (idx + 1);
+  counter.textContent = label + ' / ' + TOTAL_SECTIONS;
+  updateChapterStrip();
+  if (idx > 0 && hint) hint.style.display = 'none';
+}
+render();
+
+function go(n, updateHash = true) {
+  idx = Math.max(0, Math.min(n, slides.length - 1));
+  render();
+  if (updateHash) {
+    const counter = slides[idx].dataset.counter || (idx + 1);
+    const newHash = '#' + counter;
+    if (window.location.hash !== newHash) {
+      history.replaceState(null, '', newHash);
+    }
+  }
+}
+
+// Resolve a hash fragment (e.g. "#6", "#7a", "#7", "#99") to a slide index.
+// Priority:
+//   1. Exact match on data-counter ("#7a" → 7a, "#6" → 6).
+//   2. Chapter-prefix match for digit-only hashes ("#7" → first slide of chapter 7, i.e. 7a).
+//   3. Nearest chapter clamp for digit-only hashes ("#99" → first slide of chapter 9; "#0" → chapter 1).
+//   Returns -1 if the hash is empty or non-numeric and has no exact match.
+function slideIdxFromHash(hash) {
+  const raw = (hash || '').replace(/^#/, '').trim().toLowerCase();
+  if (!raw) return -1;
+  // 1. Exact match
+  for (let i = 0; i < slides.length; i++) {
+    const counter = (slides[i].dataset.counter || (i + 1).toString()).toLowerCase();
+    if (counter === raw) return i;
+  }
+  // 2 & 3 only apply to digit-only hashes
+  if (!/^\d+$/.test(raw)) return -1;
+  const asNum = parseInt(raw, 10);
+  // 2. Chapter prefix (first slide whose counter starts with this digit + a letter)
+  for (let i = 0; i < slides.length; i++) {
+    const counter = (slides[i].dataset.counter || '').toLowerCase();
+    if (counter.startsWith(raw) && /^[a-z]/.test(counter.slice(raw.length))) {
+      return i;
+    }
+  }
+  // 3. Nearest chapter clamp: find the first slide of the chapter whose integer is closest
+  let bestIdx = -1;
+  let bestDist = Infinity;
+  const seenChapters = new Set();
+  for (let i = 0; i < slides.length; i++) {
+    const counter = slides[i].dataset.counter || '';
+    const m = counter.match(/^(\d+)/);
+    if (!m) continue;
+    const n = parseInt(m[1], 10);
+    if (seenChapters.has(n)) continue; // keep first slide of each chapter
+    seenChapters.add(n);
+    const dist = Math.abs(n - asNum);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
+// Respond to hash changes (back/forward buttons, manual edits)
+window.addEventListener('hashchange', () => {
+  const target = slideIdxFromHash(window.location.hash);
+  if (target >= 0 && target !== idx) go(target, false);
+});
+
+// On initial load, jump to the hash target if present
+{
+  const target = slideIdxFromHash(window.location.hash);
+  if (target >= 0) go(target, false);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea')) return;
+  switch (e.key) {
+    case 'ArrowRight': case ' ': case 'PageDown': case 'ArrowDown':
+      go(idx + 1); e.preventDefault(); break;
+    case 'ArrowLeft': case 'PageUp': case 'ArrowUp':
+      go(idx - 1); e.preventDefault(); break;
+    case 'Home': go(0); break;
+    case 'End': go(slides.length - 1); break;
+    case 'f': case 'F':
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+      break;
+  }
+});
+
+// Nav buttons (the only click target that advances/rewinds)
+document.getElementById('navPrev').addEventListener('click', e => {
+  e.stopPropagation();
+  go(idx - 1);
+});
+document.getElementById('navNext').addEventListener('click', e => {
+  e.stopPropagation();
+  go(idx + 1);
+});
+
+// Update nav button disabled state on render
+const _origRender = render;
+render = function() {
+  _origRender();
+  document.getElementById('navPrev').disabled = (idx === 0);
+  document.getElementById('navNext').disabled = (idx === slides.length - 1);
+};
+render();
+
+// Prompt copy + download handlers (safe: only updates textContent)
+document.querySelectorAll('[data-action="copy"]').forEach(btn => {
+  btn.addEventListener('click', async e => {
+    e.stopPropagation();
+    const id = btn.dataset.target;
+    const text = document.getElementById(id).textContent;
+    const label = btn.querySelector('.btn-label');
+    try {
+      await navigator.clipboard.writeText(text);
+      if (label) {
+        const orig = label.textContent;
+        label.textContent = 'Copied';
+        setTimeout(() => { label.textContent = orig; }, 1800);
+      }
+    } catch {
+      alert('Copy failed, please select and copy manually.');
+    }
+  });
+});
+
+document.querySelectorAll('[data-action="download"]').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const id = btn.dataset.target;
+    const filename = btn.dataset.filename || (id + '.txt');
+    const text = document.getElementById(id).textContent;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 200);
+  });
+});
+
+let touchX = null;
+document.addEventListener('touchstart', e => touchX = e.touches[0].clientX);
+document.addEventListener('touchend', e => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) go(idx + (dx < 0 ? 1 : -1));
+  touchX = null;
+});
+</script>
+
+</body>
+</html>

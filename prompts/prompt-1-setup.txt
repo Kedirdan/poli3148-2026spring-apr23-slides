@@ -1,0 +1,64 @@
+Prepare my machine so I can use GitHub from the terminal. Run every step below in my integrated terminal. Narrate one sentence before each command, show the tail of its output, and handle errors yourself. Stop only if truly blocked.
+
+━━━ GLOBAL RULES ━━━
+• Do NOT use `exit`, `||`, or nested subshells inside polling loops, those can close the wrapper shell. Use plain for-loops with `break`.
+• When a command prompts for the macOS admin password, POST this message clearly in the chat:
+    WARNING: macOS is asking for your admin password in the terminal below.
+       Click into the terminal, type your login password, press Enter.
+       Characters WILL NOT appear as you type, that is a security feature, not a bug.
+• When gh prints a one-time device code, POST it prominently in chat (not buried), with 4-step browser instructions and a 15-minute expiry warning.
+• If any install step fails, DO NOT silently continue. Stop, clearly explain the failure, and point me to the manual download URL (https://github.com/cli/cli/releases/latest).
+
+━━━ PHASE A · Install gh ━━━
+1. Run `gh --version`. If it succeeds, skip to PHASE B.
+2. Detect my OS (run `uname -s` on Unix or check `$env:OS` / `ver` on Windows).
+3. macOS:
+   a) Run `which brew`. If Homebrew is present, run `brew install gh`, then go to step 6.
+   b) Otherwise do NOT install Homebrew (too invasive). Try the signed .pkg install:
+        ARCH=$(uname -m); [ "$ARCH" = "arm64" ] && A=arm64 || A=amd64
+        TAG=$(curl -sSI https://github.com/cli/cli/releases/latest | awk -F'/tag/' '/^location:/ {print $2}' | tr -d '\r\n')
+        If TAG is empty OR the curl command fails: STOP and print the manual-install message (see below).
+        Otherwise:
+          VER=${TAG#v}
+          curl -fL -o /tmp/gh.pkg "https://github.com/cli/cli/releases/download/${TAG}/gh_${VER}_macOS_${A}.pkg"
+          → post the sudo-password coach message, then run: sudo installer -pkg /tmp/gh.pkg -target /
+        If any command above fails (non-zero exit), STOP and print the manual-install message.
+   c) Manual-install message for macOS:
+        The automatic installer failed. Please install gh manually:
+          1. Open https://github.com/cli/cli/releases/latest in your browser.
+          2. Under "Assets", download the file ending in `_macOS_arm64.pkg` (Apple Silicon) or `_macOS_amd64.pkg` (Intel).
+          3. Double-click the downloaded .pkg file and follow the installer.
+          4. Re-paste Prompt 1 into Copilot Chat to continue.
+4. Windows (PowerShell):
+   a) Try `winget install --id GitHub.cli -e --silent --accept-package-agreements --accept-source-agreements`.
+   b) If winget is unavailable OR the command fails, STOP and print the manual-install message:
+        The automatic installer failed. Please install gh manually:
+          1. Open https://github.com/cli/cli/releases/latest in your browser.
+          2. Under "Assets", download the file ending in `_windows_amd64.msi`.
+          3. Double-click the .msi file and follow the installer.
+          4. Re-paste Prompt 1 into Copilot Chat to continue.
+5. Linux:
+   a) Follow https://github.com/cli/cli/blob/trunk/docs/install_linux.md for your distribution.
+   b) If unclear, STOP and ask me to install manually, then re-paste Prompt 1.
+6. Confirm with `gh --version`. If it still fails, STOP.
+
+━━━ PHASE B · Authenticate ━━━
+7. Run `gh auth status`. If already logged in, skip to step 10.
+8. Run: `gh auth login --hostname github.com --git-protocol https --web --scopes repo,workflow,delete_repo`
+9. Extract the 8-digit device code from output. Post this boxed message in chat:
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       YOUR ONE-TIME CODE: XXXX-XXXX
+       Valid for 15 minutes, do this now.
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       1. A github.com/login/device tab should have auto-opened.
+          If not, open it manually now.
+       2. Paste the code into the 8 boxes, click "Continue".
+       3. Review the scopes, click the green "Authorize".
+       4. "Congratulations, you're all set!" → come back to VS Code.
+   Poll with a safe for-loop (no exit, no ||):
+       for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+         gh auth status && break; sleep 5;
+       done
+   If the loop ends without login (code expired), re-run `gh auth login …`, post the new code, and poll again.
+10. Run `gh api user --jq .login` to confirm. As your final message, print on its own line:
+    Environment ready. Logged in as <username>. You're set to deploy.

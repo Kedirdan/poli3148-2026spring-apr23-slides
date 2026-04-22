@@ -1,0 +1,8 @@
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Quarto / Marp preview artifacts
+slides-*_files/
+slides-*.html
