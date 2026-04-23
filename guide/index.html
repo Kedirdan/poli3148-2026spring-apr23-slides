@@ -509,7 +509,8 @@ kbd {
       </ol>
     </li>
     <li><a href="#stuck">6 · When stuck</a></li>
-    <li><a href="#further">7 · Going further</a></li>
+    <li><a href="#manual-path">7 · Manual path</a></li>
+    <li><a href="#further">8 · Going further</a></li>
   </ol>
 
   <div class="toc-divider"></div>
@@ -538,11 +539,23 @@ kbd {
 <section class="chapter" id="intro">
   <p>This guide combines everything from the lab session — the slides, the spoken explanations, the prompts, and the troubleshooting notes — into one readable document. You can read it top to bottom the first time, and come back later for the specific parts you need.</p>
 
-  <p>By the end, you should be able to take any webpage you have on your computer and publish it online with a public URL that anyone can open. You do not need to write a single Git command. Your AI assistant (GitHub Copilot) handles all of that for you.</p>
+  <p>By the end, you should be able to take any webpage you have on your computer and publish it online with a public URL that anyone can open. You do not need to write a single Git command yourself. Your AI assistant (GitHub Copilot) handles all of that for you.</p>
 
   <div class="callout tip">
-    <span class="label">What you need</span>
-    <p>A laptop with <strong>VS Code</strong> installed, <strong>GitHub Copilot</strong> enabled (free for HKU students), and a GitHub account. That's it.</p>
+    <span class="label">Today's goal</span>
+    <p>During the lab session, you only need to <strong>confirm the deploy flow works</strong> — you are <em>not</em> submitting any assignment today. As long as you end up with a live URL showing your webpage on the internet, you are done. Take your time, this is harder than it looks.</p>
+  </div>
+
+  <div class="callout note">
+    <span class="label">Before you start</span>
+    <p>You need four things set up beforehand:</p>
+    <ul>
+      <li>A <strong>GitHub account</strong>. Sign up at <a href="https://github.com/signup" target="_blank">github.com/signup</a> with your HKU email.</li>
+      <li>GitHub <strong>Student Developer Pack</strong>, which includes free GitHub Pro. Apply at <a href="https://education.github.com/pack" target="_blank">education.github.com/pack</a>.</li>
+      <li><strong>VS Code</strong>, installed on your laptop. Download from <a href="https://code.visualstudio.com/" target="_blank">code.visualstudio.com</a>.</li>
+      <li><strong>GitHub Copilot</strong>, enabled in VS Code and signed in with your GitHub account. (Free for students.)</li>
+    </ul>
+    <p>If any of these are missing, set them up first. Everything below assumes all four are ready.</p>
   </div>
 </section>
 
@@ -628,9 +641,20 @@ then commit and push.</code></pre>
   <h4 id="setup-configure">Step 1. Configure Copilot Chat</h4>
   <p>Open Copilot Chat inside VS Code. Then:</p>
   <ol>
-    <li>Pick <code>GPT-5.3-Codex</code> as the model. If it is rate-limited, any of the three backups listed in the deck works.</li>
+    <li>Click the model chip in the Copilot Chat input row and pick <code>GPT-5.3-Codex</code>. If Codex is rate-limited, any of these three backups works (all are agentic and can run commands):
+      <ul>
+        <li><code>Gemini 3.1 Pro</code> (GitHub)</li>
+        <li><code>GLM 5.1</code> (OpenRouter)</li>
+        <li><code>Qwen 3.6 Plus</code> (OpenRouter)</li>
+      </ul>
+    </li>
     <li>Change <code>Default Approvals</code> to <strong>Autopilot (Preview)</strong> or <strong>Bypass Approvals</strong>, so Copilot can install things for you without stopping every few seconds.</li>
   </ol>
+
+  <div class="callout note">
+    <span class="label">If you don't see Autopilot</span>
+    <p>Your Copilot version is older. Pick <strong>Bypass Approvals</strong> instead — it does the same job.</p>
+  </div>
 
   <h4 id="setup-install">Step 2. Run Prompt 1</h4>
   <p>Copy the whole text of Prompt 1, paste it into Copilot Chat, and send it. Copilot installs everything for you automatically.</p>
@@ -660,6 +684,12 @@ then commit and push.</code></pre>
   <div class="callout warn">
     <span class="label">Allow all permissions</span>
     <p>When the GitHub authorization page asks for permissions (repo access, workflow, etc.), grant them all. Partial permissions cause the deploy step to fail in confusing ways.</p>
+  </div>
+
+  <div class="callout note">
+    <span class="label">Manual fallback — if the browser tab doesn't open</span>
+    <p>Open <a href="https://github.com/login/device" target="_blank">github.com/login/device</a> in any browser, sign in with your GitHub account, paste the 8-character code shown in your VS Code terminal, click <strong>Authorize</strong>, and allow all permissions. Then return to VS Code.</p>
+    <p>If Copilot never prints a code at all, open the VS Code terminal (<kbd>View</kbd> → <kbd>Terminal</kbd>) and run <code>gh auth login --web</code> by hand, then follow the prompts.</p>
   </div>
 
   <h4 id="setup-trouble">Troubleshooting Prompt 1</h4>
@@ -758,6 +788,11 @@ CSS, and assets live, and reorganize them sensibly.</code></pre>
     <span class="label">Why this happens</span>
     <p>Prompt 2 looks for <code>index.html</code> at the root or in <code>/docs/</code>, and copies standard web folders (<code>assets/</code>, <code>css/</code>, <code>js/</code>, <code>images/</code>, etc.) into <code>/docs/</code>. If your project uses unusual folder names, the automatic copy misses files.</p>
   </div>
+
+  <div class="callout note">
+    <span class="label">If Copilot gets stuck mid-deploy</span>
+    <p>If Prompt 2 fails partway and can't recover even after pasting the error back to Copilot, see <a href="#manual-path">Part 7 · The fully manual path</a> for step-by-step terminal commands and GitHub UI clicks that achieve the same result by hand.</p>
+  </div>
 </section>
 
 <section class="chapter" id="after">
@@ -772,6 +807,15 @@ CSS, and assets live, and reorganize them sensibly.</code></pre>
     <li>Wait about 30 seconds, refresh your live URL — the change is there.</li>
   </ol>
 
+  <div class="callout note">
+    <span class="label">Manual fallback</span>
+    <p>If you prefer the terminal, or if Copilot is down, open the VS Code terminal in your project folder and run:</p>
+    <pre><code>git add .
+git commit -m "your message here"
+git push</code></pre>
+    <p>Same result, no AI needed.</p>
+  </div>
+
   <h4 id="after-private">Making your repository private</h4>
   <p>By default, Prompt 2 creates your repository as <strong>public</strong>, which means <em>your code is visible to anyone on the internet</em>. For a lab submission or personal project, you probably want to keep the code private.</p>
 
@@ -780,6 +824,19 @@ CSS, and assets live, and reorganize them sensibly.</code></pre>
   <pre><code>Please make my repository private.</code></pre>
 
   <p>Your webpage will keep working. This is because GitHub Pages visibility is independent of repository visibility — and your free GitHub <strong>Student Pro</strong> benefit includes private-repo Pages hosting.</p>
+
+  <div class="callout note">
+    <span class="label">Manual fallback</span>
+    <p>You can also do this from GitHub's website directly:</p>
+    <ol>
+      <li>Go to your repository page on github.com.</li>
+      <li>Click <kbd>Settings</kbd> (top bar).</li>
+      <li>Scroll all the way to the bottom, find the red <strong>Danger Zone</strong> section.</li>
+      <li>Click <strong>Change repository visibility</strong>, then <strong>Make private</strong>.</li>
+      <li>Type the repo name to confirm, and click the red confirmation button.</li>
+    </ol>
+    <p>Your live URL continues to work because Student Pro unlocks Pages on private repos.</p>
+  </div>
 
   <div class="callout warn">
     <span class="label">Before you submit</span>
@@ -838,8 +895,107 @@ CSS, and assets live, and reorganize them sensibly.</code></pre>
   </div>
 </section>
 
-<section class="chapter" id="further">
+<section class="chapter" id="manual-path">
   <h2>Part 7</h2>
+  <h3>The fully manual path (if everything else fails)</h3>
+
+  <p>If Copilot is completely down, your quota is exhausted, or you just want to understand what happens under the hood, this section walks through the entire deployment by hand — no AI involved. The commands below run in a terminal (inside VS Code: <kbd>View</kbd> → <kbd>Terminal</kbd>).</p>
+
+  <div class="callout warn">
+    <span class="label">Only do this if needed</span>
+    <p>The AI-driven path is faster, safer, and less error-prone for most students. Use this manual path as a last resort, or to learn what is happening behind the scenes.</p>
+  </div>
+
+  <h4>M1. Install <code>gh</code> (GitHub CLI)</h4>
+  <p><strong>macOS:</strong> download the signed <code>.pkg</code> from <a href="https://cli.github.com" target="_blank">cli.github.com</a> and double-click to install.</p>
+  <p><strong>Windows:</strong> download the <code>.msi</code> from the same site, run it, and restart VS Code (and Windows, if the command is still not recognized afterwards).</p>
+  <p>Verify the install in a terminal:</p>
+  <pre><code>gh --version</code></pre>
+
+  <h4>M2. Authenticate</h4>
+  <pre><code>gh auth login --web</code></pre>
+  <p>Follow the prompts: pick <strong>GitHub.com</strong>, pick <strong>HTTPS</strong>, authorize via browser at <a href="https://github.com/login/device" target="_blank">github.com/login/device</a>, allow all permissions.</p>
+
+  <h4>M3. Prepare your project</h4>
+  <p>In your project folder, create a <code>docs/</code> folder and copy your web files into it:</p>
+  <pre><code>mkdir -p docs
+cp index.html docs/
+# also copy any css, js, assets folders your page needs:
+cp -r assets docs/ 2>/dev/null || true
+cp -r css docs/ 2>/dev/null || true
+cp -r js docs/ 2>/dev/null || true</code></pre>
+
+  <p>Create a basic <code>.gitignore</code> (copy-paste the whole block):</p>
+  <pre><code>.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+node_modules/
+.env
+*.key
+*.pem</code></pre>
+
+  <h4>M4. Initialise git and commit</h4>
+  <pre><code>git init -b main
+git add .
+git commit -m "Initial deploy to GitHub Pages"</code></pre>
+
+  <p>If git complains about missing identity:</p>
+  <pre><code>git config user.name "your-github-username"
+git config user.email "your-github-username@users.noreply.github.com"</code></pre>
+
+  <h4>M5. Create a GitHub repository and push</h4>
+  <p>Replace <code>my-project</code> with whatever you want to call it:</p>
+  <pre><code>gh repo create my-project --public --source=. --remote=origin --push</code></pre>
+
+  <p>If you prefer to create the repo via the website: go to <a href="https://github.com/new" target="_blank">github.com/new</a>, pick a name, make it <strong>Public</strong> for now, and click <strong>Create repository</strong>. Then, in the terminal:</p>
+  <pre><code>git remote add origin https://github.com/your-username/my-project.git
+git push -u origin main</code></pre>
+
+  <h4>M6. Enable GitHub Pages</h4>
+  <p>From the command line:</p>
+  <pre><code>gh api --method POST \
+  repos/your-username/my-project/pages \
+  -f "source[branch]=main" \
+  -f "source[path]=/docs"</code></pre>
+
+  <p>Or from the website:</p>
+  <ol>
+    <li>Open your repo on github.com.</li>
+    <li>Click <kbd>Settings</kbd> → <kbd>Pages</kbd> (in the left sidebar).</li>
+    <li>Under <strong>Source</strong>, pick <strong>Deploy from a branch</strong>.</li>
+    <li>Set branch to <strong>main</strong>, folder to <strong>/docs</strong>, click <strong>Save</strong>.</li>
+  </ol>
+
+  <h4>M7. Wait for the build and visit your URL</h4>
+  <p>GitHub needs up to 3 minutes to build the first version. Check status:</p>
+  <pre><code>gh api repos/your-username/my-project/pages --jq .status</code></pre>
+  <p>When it reports <code>built</code>, visit:</p>
+  <pre><code>https://your-username.github.io/my-project/</code></pre>
+
+  <h4>M8. Make the repository private (optional)</h4>
+  <pre><code>gh repo edit --visibility private --accept-visibility-change-consequences</code></pre>
+  <p>Or do it via the website: <strong>Settings → General → Danger Zone → Change visibility → Private</strong>. The live page keeps working thanks to Student Pro.</p>
+
+  <h4>M9. Update the page later</h4>
+  <p>Any time you want to publish a change:</p>
+  <pre><code>git add .
+git commit -m "describe what you changed"
+git push</code></pre>
+  <p>Wait ~30 seconds, refresh your live URL.</p>
+
+  <div class="callout tip">
+    <span class="label">Stuck?</span>
+    <p>Even if you do this manually, you can still paste any error you see into Copilot (or any other AI) and ask for help. The manual path doesn't mean going it alone — it just means you are the one typing the commands.</p>
+  </div>
+</section>
+
+<section class="chapter" id="further">
+  <h2>Part 8</h2>
   <h3>Going further</h3>
 
   <p>Once you have published one project this way, the same flow works for anything else with an <code>index.html</code>. A few ideas:</p>
