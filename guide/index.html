@@ -505,6 +505,7 @@ kbd {
       <ol>
         <li><a href="#after-update">Update your page</a></li>
         <li><a href="#after-private">Make it private</a></li>
+        <li><a href="#after-delete">Delete safely</a></li>
         <li><a href="#after-log">GITHUB_PAGES.md</a></li>
       </ol>
     </li>
@@ -543,7 +544,8 @@ kbd {
 
   <div class="callout tip">
     <span class="label">Today's goal</span>
-    <p>During the lab session, you only need to <strong>confirm the deploy flow works</strong> — you are <em>not</em> submitting any assignment today. As long as you end up with a live URL showing your webpage on the internet, you are done. Take your time, this is harder than it looks.</p>
+    <p>The lab is a test to make sure you can use GitHub Pages. As long as you end up with a live URL showing your webpage on the internet, you've done what's needed. Once you are comfortable with this flow, those of you who want to can use the same method to submit Assignment 1 later — but that is for another day, not today.</p>
+    <p>A working deployment needs your operating system, your AI assistant, and GitHub to cooperate closely. Any small mismatch between them can surface as an error, and these are the kinds of things we work through one at a time. If you hit something that doesn't click on the first try, that is entirely normal.</p>
   </div>
 
   <div class="callout note">
@@ -907,6 +909,28 @@ git push</code></pre>
   <div class="callout warn">
     <span class="label">Before you submit</span>
     <p>Unless you are explicitly okay with the world seeing your code (portfolios, public experiments), switch to private after deploying. Check your repository on github.com and confirm the private badge appears next to the name.</p>
+  </div>
+
+  <h4 id="after-delete">Deleting things safely</h4>
+  <p>At some point you will want to delete something: an old file, an unused folder, or the whole repository. This is the single operation where it is easiest to lose work you did not mean to lose, so it is worth slowing down the first few times.</p>
+
+  <p>The core risk: when you ask Copilot (or run a git command yourself), a deletion often affects <strong>both</strong> your local computer and your online repository at once. A casual <em>"delete the old-notes folder"</em> can erase the folder from your laptop, from your git history, and from GitHub in one step, and there is no recycle bin to recover from.</p>
+
+  <p>Before you ask Copilot to delete anything:</p>
+  <ol>
+    <li><strong>Keep a backup</strong> of anything you might still need. Copy the file to another location, or at minimum commit the current state first (<code>git add . && git commit -m "snapshot before deleting X"</code>) so you can roll back.</li>
+    <li><strong>Be specific about scope.</strong> If you want the file gone from the online repository but kept on your laptop, say so: <em>"remove X from the online repository only, keep my local copy untouched."</em> If you want it gone everywhere, say <em>"delete X from my project folder and from GitHub."</em></li>
+    <li><strong>Review Copilot's plan before it runs.</strong> Ask: <em>"tell me exactly which files will be removed and from where, before you do it."</em> Only approve once the list matches your intent.</li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="label">Especially careful with</span>
+    <p><code>git rm -rf</code>, <code>rm -rf</code>, <em>"delete the whole repository"</em>, and anything that targets a directory by name. These remove entire trees in one shot and have no safe undo. If you need to empty a folder, consider moving it out of your project first (to your Desktop, for example), so you can put it back if something goes wrong.</p>
+  </div>
+
+  <div class="callout tip">
+    <span class="label">Removing tracking, not the file</span>
+    <p>If you accidentally committed a file that should never have gone to GitHub (say, a large data file or a secret), you usually want to remove it from GitHub <em>without</em> deleting it locally. The correct command for that is <code>git rm --cached &lt;file&gt;</code>, followed by a commit and push. Ask Copilot: <em>"remove X from git tracking but keep the local file, then push."</em></p>
   </div>
 
   <h4 id="after-log">What is GITHUB_PAGES.md?</h4>
